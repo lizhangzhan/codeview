@@ -1,0 +1,47 @@
+C++ programs for accelerated Proximal Stochastic Dual Coordinate Ascent with L1-L2 regularization
+
+-----------
+1. Introduction
+This software package provides a sample implementation of accelerated Proximal Stochastic DualCoordinate Ascent 
+(prox-SDCA) with L1-L2 regularization described in [1] for various loss functions.  
+
+API Documentation in html/index.html
+
+-----------
+2. System Requirement
+The code is tested on Linux, but should compile on other unix systems
+with g++ and make. 
+
+-----------
+3. Building the executables
+Go to the src/ subdirectory and type 
+make
+
+This should generate the following executables 
+train (for training) 
+predict (for prediction)
+
+-----------
+5. Test
+Go to the exp/ subdirectory and type run
+
+----------
+6. Help
+
+Use train -h to see command line options for the training program
+Use predict -h to see command line options for the prediction program
+
+----------
+6. Contact 
+tongzhang0@gmail.com
+
+------------
+7. Copyright
+The software is distributed under the GNU public license. Please read the file COPYING.
+
+-------------
+8. References
+
+[1] Shai Shalev-Schwarz and Tong Zhang. Accelerated Proximal Stochastic Dual Coordinate Ascent for Regularized Loss Minimization.
+    Technical report: http://arxiv.org/abs/1309.2375
+
