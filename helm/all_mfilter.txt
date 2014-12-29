@@ -1,0 +1,2290 @@
+####$$$$ mFilter/DESCRIPTION
+Package: mFilter
+Title: Miscellaneous time series filters
+Date: 2007-10-2
+Version: 0.1-3
+Author: Mehmet Balcilar <mbalcilar@yahoo.com>
+Depends: R (>= 2.2.0), stats
+Suggests: tseries, pastecs, locfit, tseriesChaos, RTisean, tsDyn,
+        forecast
+Description: The package implements several time series filters useful
+        for smoothing and extracting trend and cyclical components of a
+        time series. The routines are commonly used in economics and
+        finance, however they should also be interest to other areas.
+        Currently, Christiano-Fitzgerald, Baxter-King,
+        Hodrick-Prescott, Butterworth, and trigonometric regression
+        filters are included in the package.
+Maintainer: Mehmet Balcilar <mbalcilar@yahoo.com>
+License: GPL (>= 2)
+URL: http://www.mbalcilar.net/mFilter, http://www.r-project.org
+Packaged: Tue Nov 6 09:32:46 2007; mehmet
+Repository: CRAN
+Date/Publication: 2007-11-06 10:00:46
+####$$$$ mFilter/MD5
+ff4ef75e119e6f37247a0fe31af1d797 *DESCRIPTION
+7aca97179faf804a36c05b71e8ff17f9 *NAMESPACE
+056489901aa696f20d3f4238d5c3507a *R/bkfilter.R
+a5a93df689145680f69cec93b90240db *R/bwfilter.R
+244dbf3675eed10e0a3689bf2e8f9701 *R/cffilter.R
+ec7181d29283062ea4a74c1b5282b6d2 *R/hpfilter.R
+d262ba68c0423449ad443ff81160bfa5 *R/mFilter.R
+e2a5cd36073dc05afbc5197dafabd137 *R/trfilter.R
+147c5c8a22abc12327d263cd315cd9f7 *R/zzz.R
+c2dc9412dbd38296ab06a59e97ac96f7 *data/unemp.R
+3edafa5df229b5a17630cd6631b288fb *man/bkfilter.Rd
+c6ca2f95f6b2cd959721bc430e3eae3f *man/bwfilter.Rd
+51bab14072aa9c3a0522a65726cb436b *man/cffilter.Rd
+ab883f4129b441832c08135a032f73e8 *man/hpfilter.Rd
+6b4b4a7924d59c0345ec2d450455c596 *man/mFilter-methods.Rd
+7c04240ecb06bf9473f84e178bba3519 *man/mFilter-package.Rd
+cf048935fbcf2f427b151142779b8fde *man/mFilter.Rd
+3fb51565e5e324c743d90049b9703b38 *man/trfilter.Rd
+5b3b617f878fffd9225f742c44f8100b *man/unemp.Rd
+####$$$$ mFilter/NAMESPACE
+#useDynLib("mFilter")
+
+import("graphics", "stats", "utils")
+
+export("mFilter",
+       "mFilter.default",
+       "mFilter.ts",
+       "bwfilter",
+       "bkfilter",
+       "cffilter",
+       "hpfilter",
+       "trfilter",
+       "print.mFilter",
+       "summary.mFilter",
+       "plot.mFilter",
+       "fitted.mFilter",
+       "residuals.mFilter"
+       )
+
+S3method("print", "mFilter")
+S3method("summary", "mFilter")
+S3method("plot", "mFilter")
+S3method("fitted", "mFilter")
+S3method("residuals", "mFilter")
+
+####$$$$ mFilter\data/unemp.R
+unemp <- structure(c(5.83333333333, 5.1, 5.26666666667, 5.6, 5.13333333333, 
+5.23333333333, 5.53333333333, 6.26666666667, 6.8, 7, 6.76666666667, 
+6.2, 5.63333333333, 5.53333333333, 5.56666666667, 5.53333333333, 
+5.76666666667, 5.73333333333, 5.5, 5.56666666667, 5.46666666667, 
+5.2, 5, 4.96666666667, 4.9, 4.66666666667, 4.36666666667, 4.1, 
+3.86666666667, 3.83333333333, 3.76666666667, 3.7, 3.83333333333, 
+3.83333333333, 3.8, 3.9, 3.73333333333, 3.56666666667, 3.53333333333, 
+3.4, 3.4, 3.43333333333, 3.56666666667, 3.56666666667, 4.16666666667, 
+4.76666666667, 5.16666666667, 5.83333333333, 5.93333333333, 5.9, 
+6.03333333333, 5.93333333333, 5.76666666667, 5.7, 5.56666666667, 
+5.36666666667, 4.93333333333, 4.93333333333, 4.8, 4.76666666667, 
+5.13333333333, 5.2, 5.63333333333, 6.6, 8.26666666667, 8.86666666667, 
+8.46666666667, 8.3, 7.73333333333, 7.56666666667, 7.73333333333, 
+7.76666666667, 7.5, 7.13333333333, 6.9, 6.66666666667, 6.33333333333, 
+6, 6.03333333333, 5.9, 5.86666666667, 5.7, 5.86666666667, 5.96666666667, 
+6.3, 7.33333333333, 7.66666666667, 7.4, 7.43333333333, 7.4, 7.4, 
+8.23333333333, 8.83333333333, 9.43333333333, 9.9, 10.66666666667, 
+10.36666666667, 10.13333333333, 9.36666666667, 8.53333333333, 
+7.86666666667, 7.43333333333, 7.43333333333, 7.3, 7.23333333333, 
+7.3, 7.2, 7.03333333333, 7.03333333333, 7.16666666667, 6.96666666667, 
+6.83333333333, 6.6, 6.26666666667, 6, 5.83333333333, 5.7, 5.46666666667, 
+5.46666666667, 5.33333333333, 5.2, 5.23333333333, 5.23333333333, 
+5.36666666667, 5.3, 5.33333333333, 5.7, 6.13333333333, 6.6, 6.83333333333, 
+6.86666666667, 7.1, 7.36666666667, 7.6, 7.63333333333, 7.36666666667, 
+7.13333333333, 7.06666666667, 6.8, 6.63333333333, 6.56666666667, 
+6.2, 6, 5.63333333333, 5.46666666667, 5.66666666667, 5.66666666667, 
+5.56666666667, 5.53333333333, 5.5, 5.26666666667, 5.33333333333, 
+5.26666666667, 5, 4.86666666667, 4.66666666667, 4.66666666667, 
+4.43333333333, 4.5, 4.43333333333, 4.3, 4.3, 4.23333333333, 4.1, 
+4.03333333333, 4.03333333333, 4, 3.96666666667), .Tsp = c(1959, 
+2000.75, 4), class = "ts")
+####$$$$ mFilter\man/bkfilter.Rd
+\name{bkfilter}
+\alias{bkfilter}
+
+\title{
+  Baxter-King filter of a time series
+}
+
+\description{
+  This function implements the Baxter-King approximation to
+  the band pass filter for a time series. The function computes cyclical
+  and trend components of the time series using band-pass
+  approximation for fixed and variable length filters. 
+}
+
+\usage{
+bkfilter(x,pl=NULL,pu=NULL,nfix=NULL,type=c("fixed","variable"),drift=FALSE)
+}
+
+\arguments{
+  \item{x}{a regular time series}
+
+  \item{type}{character, indicating the filter type,
+    \code{"fixed"}, for the fixed length Baxter-King filter 
+    (default),
+    \code{"variable"}, for the variable length Baxter-King filter.}
+
+  \item{pl}{integer. minimum period of oscillation of desired component (pl<=2).}
+
+  \item{pu}{integer. maximum period of oscillation of desired component (2<=pl<pu<infinity).}
+
+  \item{drift}{logical, \code{FALSE} if no drift in time series
+    (default),  \code{TRUE} if drift in time series.}
+  
+  \item{nfix}{sets fixed lead/lag length or order of the filter. The
+  \code{nfix} option sets the order of the filter by 2*nfix+1. The
+  default is \code{frequency(x)*3}.}
+}
+
+\details{
+  Almost all filters in this package can be put into the
+following framework. Given a time series \eqn{\{x_t\}^T_{t=1}} we are
+interested in isolating component of \eqn{x_t}, denoted \eqn{y_t} with
+period of oscillations between \eqn{p_l} and \eqn{p_u}, where \eqn{2
+  \le p_l < p_u < \infty}. 
+
+Consider the following decomposition of the time series
+\deqn{x_t = y_t + \bar{x}_t}
+The component \eqn{y_t} is assumed to have power only in the frequencies
+in the interval \eqn{\{(a,b) \cup (-a,-b)\} \in (-\pi, \pi)}. \eqn{a}
+and \eqn{b} are related to \eqn{p_l} and \eqn{p_u} by
+\deqn{a=\frac{2 \pi}{p_u}\ \ \ \ \ {b=\frac{2 \pi}{p_l}}}
+
+If infinite amount of data is available, then we can use the ideal
+bandpass filter
+\deqn{y_t = B(L)x_t}
+where the filter, \eqn{B(L)}, is given in terms of the lag operator
+\eqn{L} and defined as
+\deqn{B(L) = \sum^\infty_{j=-\infty} B_j L^j, \ \ \ L^k x_t = x_{t-k}}
+The ideal bandpass filter weights are given by
+\deqn{B_j = \frac{\sin(jb)-\sin(ja)}{\pi j}}
+\deqn{B_0=\frac{b-a}{\pi}}
+
+The Baxter-King filter is a finite data approximation to the
+ideal bandpass filter with following moving average weights
+\deqn{y_t = \hat{B}(L)x_t=\sum^{n}_{j=-n}\hat{B}_{j} x_{t+j}=\hat{B}_0
+  x_t + \sum^{n}_{j=1} \hat{B}_j (x_{t-j}+x_{t+j})}
+where
+\deqn{\hat{B}_j=B_j-\frac{1}{2n+1}\sum^{n}_{j=-n}B_{j}}
+
+If \code{drift=TRUE} the drift adjusted series is obtained
+\deqn{\tilde{x}_{t}=x_t-t\left(\frac{x_{T}-x_{1}}{T-1}\right), \ \ t=0,1,\dots,T-1}
+where \eqn{\tilde{x}_{t}} is the undrifted series.
+}
+
+\value{
+  A "\code{mFilter}" object (see \code{\link{mFilter}}).
+}
+
+\references{
+M. Baxter and R.G. King. Measuring business cycles: Approximate bandpass
+filters. The Review of Economics and Statistics, 81(4):575-93, 1999.
+
+L. Christiano and T.J. Fitzgerald. The bandpass filter. International Economic
+Review, 44(2):435-65, 2003.
+
+J. D. Hamilton. \emph{Time series analysis.} Princeton, 1994.
+
+R.J. Hodrick and E.C. Prescott. Postwar US business cycles: an empirical
+investigation. Journal of Money, Credit, and Banking, 29(1):1-16, 1997.
+
+R.G. King and S.T. Rebelo. Low frequency filtering and real business cycles.
+Journal of Economic Dynamics and Control, 17(1-2):207-31, 1993.
+
+D.S.G. Pollock. Trend estimation and de-trending via rational square-wave
+filters. Journal of Econometrics, 99:317-334, 2000.
+}
+
+\author{
+  Mehmet Balcilar, \email{mbalcilar@yahoo.com}
+}
+
+\seealso{
+  \code{\link{mFilter}}, \code{\link{bwfilter}}, \code{\link{cffilter}},
+  \code{\link{hpfilter}}, \code{\link{trfilter}}
+}
+
+\examples{
+## library(mFilter)
+
+data(unemp)
+
+opar <- par(no.readonly=TRUE)
+
+unemp.bk <- bkfilter(unemp)
+plot(unemp.bk)
+unemp.bk1 <- bkfilter(unemp, drift=TRUE)
+unemp.bk2 <- bkfilter(unemp, pl=8,pu=40,drift=TRUE)
+unemp.bk3 <- bkfilter(unemp, pl=2,pu=60,drift=TRUE)
+unemp.bk4 <- bkfilter(unemp, pl=2,pu=40,drift=TRUE)
+
+par(mfrow=c(2,1),mar=c(3,3,2,1),cex=.8)
+plot(unemp.bk1$x,
+    main="Baxter-King filter of unemployment: Trend, drift=TRUE",
+    col=1, ylab="")
+lines(unemp.bk1$trend,col=2)
+lines(unemp.bk2$trend,col=3)
+lines(unemp.bk3$trend,col=4)
+lines(unemp.bk4$trend,col=5)
+legend("topleft",legend=c("series", "pl=2, pu=32", "pl=8, pu=40", 
+      "pl=2, pu=60", "pl=2, pu=40"), col=1:5, lty=rep(1,5), ncol=1)
+
+plot(unemp.bk1$cycle,
+main="Baxter-King filter of unemployment: Cycle,drift=TRUE", 
+      col=2, ylab="", ylim=range(unemp.bk3$cycle,na.rm=TRUE))
+lines(unemp.bk2$cycle,col=3)
+lines(unemp.bk3$cycle,col=4)
+lines(unemp.bk4$cycle,col=5)
+## legend("topleft",legend=c("pl=2, pu=32", "pl=8, pu=40", "pl=2, pu=60",
+## "pl=2, pu=40"), col=1:5, lty=rep(1,5), ncol=1)
+
+par(opar)
+}
+
+\keyword{ts}
+\keyword{smooth}
+\keyword{loess}
+\keyword{nonparametric}
+####$$$$ mFilter\man/bwfilter.Rd
+\name{bwfilter}
+\alias{bwfilter}
+
+\title{
+  Butterworth filter of a time series
+}
+
+\description{
+  Filters a time series using the Butterworth square-wave
+highpass filter described in Pollock (2000). 
+}
+
+\usage{
+bwfilter(x,freq=NULL,nfix=NULL,drift=FALSE)
+}
+
+\arguments{
+  \item{x}{a regular time series}
+
+  \item{nfix}{sets the order of the filter. The default is
+  \code{nfix=2}, when \code{nfix=NULL}.}
+  
+  \item{freq}{integer, the cut-off frequency of the Butterworth
+  filter. The default is \code{trunc(2.5*frequency(x))}.}
+
+  \item{drift}{logical, \code{FALSE} if no drift in time series
+    (default),  \code{TRUE} if drift in time series.}
+}
+
+\details{
+  Almost all filters in this package can be put into the
+following framework. Given a time series \eqn{\{x_t\}^T_{t=1}} we are
+interested in isolating component of \eqn{x_t}, denoted \eqn{y_t} with
+period of oscillations between \eqn{p_l} and \eqn{p_u}, where \eqn{2
+  \le p_l < p_u < \infty}. 
+
+Consider the following decomposition of the time series
+\deqn{x_t = y_t + \bar{x}_t}
+The component \eqn{y_t} is assumed to have power only in the frequencies
+in the interval \eqn{\{(a,b) \cup (-a,-b)\} \in (-\pi, \pi)}. \eqn{a}
+and \eqn{b} are related to \eqn{p_l} and \eqn{p_u} by
+\deqn{a=\frac{2 \pi}{p_u}\ \ \ \ \ {b=\frac{2 \pi}{p_l}}}
+
+If infinite amount of data is available, then we can use the ideal
+bandpass filter
+\deqn{y_t = B(L)x_t}
+where the filter, \eqn{B(L)}, is given in terms of the lag operator
+\eqn{L} and defined as
+\deqn{B(L) = \sum^\infty_{j=-\infty} B_j L^j, \ \ \ L^k x_t = x_{t-k}}
+The ideal bandpass filter weights are given by
+\deqn{B_j = \frac{\sin(jb)-\sin(ja)}{\pi j}}
+\deqn{B_0=\frac{b-a}{\pi}}
+
+The digital version of the Butterworth highpass filter is described by the
+rational polynomial expression (the filter's z-transform)
+\deqn{\frac{\lambda(1-z)^n(1-z^{-1})^n}{(1+z)^n(1+z^{-1})^n+\lambda(1-z)^n(1-z^{-1})^n}}
+The time domain version can be obtained by substituting \eqn{z} for the
+lag operator \eqn{L}.
+
+Pollock derives a specialized finite-sample version of the Butterworth
+filter on the basis of signal extraction theory. Let \eqn{s_t} be the
+trend and \eqn{c_t} cyclical component of \eqn{y_t}, then these
+components are extracted as
+\deqn{y_t=s_t+c_t=\frac{(1+L)^n}{(1-L)^d}\nu_t+(1-L)^{n-d}\varepsilon_t}
+where \eqn{\nu_t \sim N(0,\sigma_\nu^2)} and \eqn{\varepsilon_t \sim N(0,\sigma_\varepsilon^2)}.
+
+If \code{drift=TRUE} the drift adjusted series is obtained as
+\deqn{\tilde{x}_{t}=x_t-t\left(\frac{x_{T}-x_{1}}{T-1}\right), \ \ t=0,1,\dots,T-1}
+where \eqn{\tilde{x}_{t}} is the undrifted series.
+}
+
+\value{
+  A "\code{mFilter}" object (see \code{\link{mFilter}}).
+}
+
+\references{
+M. Baxter and R.G. King. Measuring business cycles: Approximate bandpass
+filters. The Review of Economics and Statistics, 81(4):575-93, 1999.
+
+L. Christiano and T.J. Fitzgerald. The bandpass filter. International Economic
+Review, 44(2):435-65, 2003.
+
+J. D. Hamilton. \emph{Time series analysis.} Princeton, 1994.
+
+R.J. Hodrick and E.C. Prescott. Postwar US business cycles: an empirical
+investigation. Journal of Money, Credit, and Banking, 29(1):1-16, 1997.
+
+R.G. King and S.T. Rebelo. Low frequency filtering and real business cycles.
+Journal of Economic Dynamics and Control, 17(1-2):207-31, 1993.
+
+D.S.G. Pollock. Trend estimation and de-trending via rational square-wave
+filters. Journal of Econometrics, 99:317-334, 2000.
+}
+
+\author{
+  Mehmet Balcilar, \email{mbalcilar@yahoo.com}
+}
+
+\seealso{
+  \code{\link{mFilter}}, \code{\link{hpfilter}}, \code{\link{cffilter}},
+  \code{\link{bkfilter}}, \code{\link{trfilter}}
+}
+
+\examples{
+## library(mFilter)
+
+data(unemp)
+
+opar <- par(no.readonly=TRUE)
+
+unemp.bw <- bwfilter(unemp)
+plot(unemp.bw)
+unemp.bw1 <- bwfilter(unemp, drift=TRUE)
+unemp.bw2 <- bwfilter(unemp, freq=8,drift=TRUE)
+unemp.bw3 <- bwfilter(unemp, freq=10, nfix=3, drift=TRUE)
+unemp.bw4 <- bwfilter(unemp, freq=10, nfix=4, drift=TRUE)
+
+par(mfrow=c(2,1),mar=c(3,3,2,1),cex=.8)
+plot(unemp.bw1$x,
+     main="Butterworth filter of unemployment: Trend, 
+     drift=TRUE",col=1, ylab="")
+lines(unemp.bw1$trend,col=2)
+lines(unemp.bw2$trend,col=3)
+lines(unemp.bw3$trend,col=4)
+lines(unemp.bw4$trend,col=5)
+legend("topleft",legend=c("series", "freq=10, nfix=2", 
+       "freq=8, nfix=2", "freq=10, nfix=3", "freq=10, nfix=4"), 
+       col=1:5, lty=rep(1,5), ncol=1)
+
+plot(unemp.bw1$cycle,
+     main="Butterworth filter of unemployment: Cycle,drift=TRUE", 
+     col=2, ylab="", ylim=range(unemp.bw3$cycle,na.rm=TRUE))
+lines(unemp.bw2$cycle,col=3)
+lines(unemp.bw3$cycle,col=4)
+lines(unemp.bw4$cycle,col=5)
+## legend("topleft",legend=c("series", "freq=10, nfix=2", "freq=8,
+## nfix=2", "freq## =10, nfix=3", "freq=10, nfix=4"), col=1:5, 
+## lty=rep(1,5), ncol=1)
+
+par(opar)
+}
+
+\keyword{ts}
+\keyword{smooth}
+\keyword{loess}
+\keyword{nonparametric}
+####$$$$ mFilter\man/cffilter.Rd
+\name{cffilter}
+\alias{cffilter}
+
+\title{
+  Christiano-Fitzgerald filter of a time series
+}
+
+\description{
+  This function implements the Christiano-Fitzgerald approximation to
+  the ideal band pass filter for a time series. The function computes cyclical
+  and trend components of the time series using several band-pass
+  approximation strategies. 
+}
+
+\usage{
+cffilter(x,pl=NULL,pu=NULL,root=FALSE,drift=FALSE,
+         type=c("asymmetric","symmetric","fixed","baxter-king","trigonometric"),
+	 nfix=NULL,theta=1)
+}
+
+\arguments{
+  \item{x}{a regular time series.}
+
+  \item{type}{the filter type,
+    \code{"asymmetric"}, asymmetric Christiano-Fitzgerald filter
+    (default),
+    \code{"symmetric"}, symmetric Christiano-Fitzgerald filter
+    \code{"fixed"}, fixed length Christiano-Fitzgerald filter,
+    \code{"baxter-king"}, Baxter-King fixed length symmetric filter,
+    \code{"trigonometric"}, trigonometric regression filter.}
+
+  \item{pl}{minimum period of oscillation of desired component (pl<=2).}
+
+  \item{pu}{maximum period of oscillation of desired component (2<=pl<pu<infinity).}
+
+  \item{root}{logical, \code{FALSE} if no unit root in time series
+    (default),  \code{TRUE} if unit root in time series. The
+    \code{root} option has no effect if \code{type} is
+    \code{"baxter-king"} or \code{"trigonometric"}.}
+
+  \item{drift}{logical, \code{FALSE} if no drift in time series
+    (default),  \code{TRUE} if drift in time series.}
+  
+  \item{nfix}{sets fixed lead/lag length or order of the filter with
+    \code{"baxter-king"} and \code{"fixed"}. The \code{nfix} option sets
+  the order of the filter by 2*nfix+1. The default is \code{nfix=1}.}
+
+\item{theta}{moving average coefficients for time series model: x(t) =
+  mu + root*x(t-1) + theta(1)*e(t) + theta(2)*e(t-1) + \dots, where e(t)
+  is a white noise.}
+}
+
+\details{
+  Almost all filters in this package can be put into the
+following framework. Given a time series \eqn{\{x_t\}^T_{t=1}} we are
+interested in isolating component of \eqn{x_t}, denoted \eqn{y_t} with
+period of oscillations between \eqn{p_l} and \eqn{p_u}, where \eqn{2
+  \le p_l < p_u < \infty}. 
+
+Consider the following decomposition of the time series
+\deqn{x_t = y_t + \bar{x}_t}
+The component \eqn{y_t} is assumed to have power only in the frequencies
+in the interval \eqn{\{(a,b) \cup (-a,-b)\} \in (-\pi, \pi)}. \eqn{a}
+and \eqn{b} are related to \eqn{p_l} and \eqn{p_u} by
+\deqn{a=\frac{2 \pi}{p_u}\ \ \ \ \ {b=\frac{2 \pi}{p_l}}}
+
+If infinite amount of data is available, then we can use the ideal
+bandpass filter
+\deqn{y_t = B(L)x_t}
+where the filter, \eqn{B(L)}, is given in terms of the lag operator
+\eqn{L} and defined as
+\deqn{B(L) = \sum^\infty_{j=-\infty} B_j L^j, \ \ \ L^k x_t = x_{t-k}}
+The ideal bandpass filter weights are given by
+\deqn{B_j = \frac{\sin(jb)-\sin(ja)}{\pi j}}
+\deqn{B_0=\frac{b-a}{\pi}}
+The finite sample approximation to the ideal bandpass filter uses the
+alternative filter
+\deqn{y_t = \hat{B}(L)x_t=\sum^{n_2}_{j=-n_1}\hat{B}_{t,j} x_{t+j}}
+Here the weights, \eqn{\hat{B}_{t,j}}, of the approximation is a
+solution to
+\deqn{\hat{B}_{t,j}= \arg \min E \{ (y_t-\hat{y}_t)^2 \}}
+The Christiano-Fitzgerald filter is a finite data approximation to the
+ideal bandpass filter and minimizes the mean squared error defined in the
+above equation.
+
+Several band-pass approximation strategies can be selected in the
+function \code{cffilter}. The default setting of \code{cffilter} returns
+the filtered data \eqn{\hat{y_t}} associated with the unrestricted optimal filter
+assuming no unit root, no drift and an iid filter.
+
+If \code{theta} is not equal to 1 the series is assumed to follow a
+moving average process. The moving average weights are given by \code{theta}. The default is
+\code{theta=1} (iid series). If \code{theta}\eqn{=(\theta_1, \theta_2, \dots)} then
+the series is assumed to be
+\deqn{x_t = \mu + 1_{root} x_{t-1} + \theta_1 e_t + \theta_2 e_{t-1} + \dots}
+where \eqn{1_{root}=1} if the option \code{root=1} and \eqn{1_{root}=0}
+if the option \code{root=0}, and \eqn{e_t} is a white noise.
+
+If \code{drift=TRUE} the drift adjusted series is obtained as
+\deqn{\tilde{x}_{t}=x_t-t\left(\frac{x_{T}-x_{1}}{T-1}\right), \ \ t=0,1,\dots,T-1}
+where \eqn{\tilde{x}_{t}} is the undrifted series.
+}
+
+\value{
+  A "\code{mFilter}" object (see \code{\link{mFilter}}).
+}
+
+\references{
+M. Baxter and R.G. King. Measuring business cycles: Approximate bandpass
+filters. The Review of Economics and Statistics, 81(4):575-93, 1999.
+
+L. Christiano and T.J. Fitzgerald. The bandpass filter. International Economic
+Review, 44(2):435-65, 2003.
+
+J. D. Hamilton. \emph{Time series analysis.} Princeton, 1994.
+
+R.J. Hodrick and E.C. Prescott. Postwar US business cycles: an empirical
+investigation. Journal of Money, Credit, and Banking, 29(1):1-16, 1997.
+
+R.G. King and S.T. Rebelo. Low frequency filtering and real business cycles.
+Journal of Economic Dynamics and Control, 17(1-2):207-31, 1993.
+
+D.S.G. Pollock. Trend estimation and de-trending via rational square-wave
+filters. Journal of Econometrics, 99:317-334, 2000.
+}
+
+\author{
+  Mehmet Balcilar, \email{mbalcilar@yahoo.com}
+}
+
+\seealso{
+  \code{\link{mFilter}}, \code{\link{bwfilter}}, \code{\link{bkfilter}},
+  \code{\link{hpfilter}}, \code{\link{trfilter}}
+}
+
+\examples{
+## library(mFilter)
+
+data(unemp)
+
+opar <- par(no.readonly=TRUE)
+
+unemp.cf <- cffilter(unemp)
+plot(unemp.cf)
+unemp.cf1 <- cffilter(unemp, drift=TRUE, root=TRUE)
+unemp.cf2 <- cffilter(unemp, pl=8,pu=40,drift=TRUE, root=TRUE)
+unemp.cf3 <- cffilter(unemp, pl=2,pu=60,drift=TRUE, root=TRUE)
+unemp.cf4 <- cffilter(unemp, pl=2,pu=40,drift=TRUE, root=TRUE,theta=c(.1,.4))
+
+par(mfrow=c(2,1),mar=c(3,3,2,1),cex=.8)
+plot(unemp.cf1$x,
+main="Christiano-Fitzgerald filter of unemployment: Trend \n root=TRUE,drift=TRUE",
+col=1, ylab="")
+lines(unemp.cf1$trend,col=2)
+lines(unemp.cf2$trend,col=3)
+lines(unemp.cf3$trend,col=4)
+lines(unemp.cf4$trend,col=5)
+legend("topleft",legend=c("series", "pl=2, pu=32", "pl=8, pu=40", "pl=2, pu=60",
+"pl=2, pu=40, theta=.1,.4"), col=1:5, lty=rep(1,5), ncol=1)
+
+plot(unemp.cf1$cycle,
+main="Christiano-Fitzgerald filter of unemployment: Cycle \n root=TRUE,drift=TRUE", 
+col=2, ylab="", ylim=range(unemp.cf3$cycle))
+lines(unemp.cf2$cycle,col=3)
+lines(unemp.cf3$cycle,col=4)
+lines(unemp.cf4$cycle,col=5)
+## legend("topleft",legend=c("pl=2, pu=32", "pl=8, pu=40", "pl=2, pu=60",
+## "pl=2, pu=40, theta=.1,.4"), col=2:5, lty=rep(1,4), ncol=2)
+
+par(opar)
+}
+
+\keyword{ts}
+\keyword{smooth}
+\keyword{loess}
+\keyword{nonparametric}
+####$$$$ mFilter\man/hpfilter.Rd
+\name{hpfilter}
+\alias{hpfilter}
+
+\title{
+  Hodrick-Prescott filter of a time series
+}
+
+\description{
+  This function implements the Hodrick-Prescott for estimating cyclical
+  and trend component of a time series. The function computes cyclical
+  and trend components of the time series using a frequency cut-off or
+  smoothness parameter. 
+}
+
+\usage{
+hpfilter(x,freq=NULL,type=c("lambda","frequency"),drift=FALSE)
+}
+
+\arguments{
+  \item{x}{a regular time series.}
+  
+  \item{type}{character, indicating the filter type,
+    \code{"lambda"}, for the filter that uses smoothness penalty
+    parameter of the Hodrick-Prescott filter 
+    (default),
+    \code{"frequency"}, for the filter that uses a frequency cut-off
+    type Hodrick-Prescott filter. These are related by
+    \eqn{lambda = (2*sin(pi/frequency))^{-4}}.}
+
+  \item{freq}{integer, if \code{type="lambda"} then \code{freq} is the
+  smoothing parameter (lambda) of the Hodrick-Prescott filter, if
+  \code{type="frequency"} then \code{freq} is the
+  cut-off frequency of the Hodrick-Prescott filter.}
+
+  \item{drift}{logical, \code{FALSE} if no drift in time series
+    (default),  \code{TRUE} if drift in time series.}
+}
+
+\details{
+  Almost all filters in this package can be put into the
+following framework. Given a time series \eqn{\{x_t\}^T_{t=1}} we are
+interested in isolating component of \eqn{x_t}, denoted \eqn{y_t} with
+period of oscillations between \eqn{p_l} and \eqn{p_u}, where \eqn{2
+  \le p_l < p_u < \infty}. 
+
+Consider the following decomposition of the time series
+\deqn{x_t = y_t + \bar{x}_t}
+The component \eqn{y_t} is assumed to have power only in the frequencies
+in the interval \eqn{\{(a,b) \cup (-a,-b)\} \in (-\pi, \pi)}. \eqn{a}
+and \eqn{b} are related to \eqn{p_l} and \eqn{p_u} by
+\deqn{a=\frac{2 \pi}{p_u}\ \ \ \ \ {b=\frac{2 \pi}{p_l}}}
+
+If infinite amount of data is available, then we can use the ideal
+bandpass filter
+\deqn{y_t = B(L)x_t}
+where the filter, \eqn{B(L)}, is given in terms of the lag operator
+\eqn{L} and defined as
+\deqn{B(L) = \sum^\infty_{j=-\infty} B_j L^j, \ \ \ L^k x_t = x_{t-k}}
+The ideal bandpass filter weights are given by
+\deqn{B_j = \frac{\sin(jb)-\sin(ja)}{\pi j}}
+\deqn{B_0=\frac{b-a}{\pi}}
+
+The Hodrick-Prescott filter obtains the filter weights \eqn{\hat{B}_j}
+as a solution to 
+\deqn{\hat{B}_{j}= \arg \min E \{ (y_t-\hat{y}_t)^2 \} = \arg \min
+\left\{ \sum^{T}_{t=1}(y_t-\hat{y}_{t})^2 + \lambda\sum^{T-1}_{t=2}(\hat{y}_{t+1}-2\hat{y}_{t}+\hat{y}_{t-1})^2 \right\}}
+
+The Hodrick-Prescott filter is a finite data approximation with
+following moving average weights 
+\deqn{\hat{B}_j=\frac{1}{2\pi}\int^{\pi}_{-\pi}
+\frac{4\lambda(1-\cos(\omega))^2}{1+4\lambda(1-\cos(\omega))^2}e^{i \omega
+j}  d \omega}
+
+If \code{drift=TRUE} the drift adjusted series is obtained as
+\deqn{\tilde{x}_{t}=x_t-t\left(\frac{x_{T}-x_{1}}{T-1}\right), \ \ t=0,1,\dots,T-1}
+where \eqn{\tilde{x}_{t}} is the undrifted series.
+}
+
+\value{
+  A "\code{mFilter}" object (see \code{\link{mFilter}}).
+}
+
+\references{
+M. Baxter and R.G. King. Measuring business cycles: Approximate bandpass
+filters. The Review of Economics and Statistics, 81(4):575-93, 1999.
+
+L. Christiano and T.J. Fitzgerald. The bandpass filter. International Economic
+Review, 44(2):435-65, 2003.
+
+J. D. Hamilton. \emph{Time series analysis.} Princeton, 1994.
+
+R.J. Hodrick and E.C. Prescott. Postwar US business cycles: an empirical
+investigation. Journal of Money, Credit, and Banking, 29(1):1-16, 1997.
+
+R.G. King and S.T. Rebelo. Low frequency filtering and real business cycles.
+Journal of Economic Dynamics and Control, 17(1-2):207-31, 1993.
+
+D.S.G. Pollock. Trend estimation and de-trending via rational square-wave
+filters. Journal of Econometrics, 99:317-334, 2000.
+}
+
+\author{
+  Mehmet Balcilar, \email{mbalcilar@yahoo.com}
+}
+
+\seealso{
+  \code{\link{mFilter}}, \code{\link{bwfilter}}, \code{\link{cffilter}},
+  \code{\link{bkfilter}}, \code{\link{trfilter}}
+}
+
+\examples{
+## library(mFilter)
+
+data(unemp)
+
+opar <- par(no.readonly=TRUE)
+
+unemp.hp <- hpfilter(unemp)
+plot(unemp.hp)
+unemp.hp1 <- hpfilter(unemp, drift=TRUE)
+unemp.hp2 <- hpfilter(unemp, freq=800, drift=TRUE)
+unemp.hp3 <- hpfilter(unemp, freq=12,type="frequency",drift=TRUE)
+unemp.hp4 <- hpfilter(unemp, freq=52,type="frequency",drift=TRUE)
+
+par(mfrow=c(2,1),mar=c(3,3,2,1),cex=.8)
+plot(unemp.hp1$x,  ylim=c(2,13),
+main="Hodrick-Prescott filter of unemployment: Trend, drift=TRUE",
+     col=1, ylab="")
+lines(unemp.hp1$trend,col=2)
+lines(unemp.hp2$trend,col=3)
+lines(unemp.hp3$trend,col=4)
+lines(unemp.hp4$trend,col=5)
+legend("topleft",legend=c("series", "lambda=1600", "lambda=800", 
+       "freq=12", "freq=52"), col=1:5, lty=rep(1,5), ncol=1)
+
+plot(unemp.hp1$cycle,
+main="Hodrick-Prescott filter of unemployment: Cycle,drift=TRUE", 
+     col=2, ylab="", ylim=range(unemp.hp4$cycle,na.rm=TRUE))
+lines(unemp.hp2$cycle,col=3)
+lines(unemp.hp3$cycle,col=4)
+lines(unemp.hp4$cycle,col=5)
+## legend("topleft",legend=c("lambda=1600", "lambda=800",
+## "freq=12", "freq=52"), col=1:5, lty=rep(1,5), ncol=1)
+
+par(opar)
+}
+
+\keyword{ts}
+\keyword{smooth}
+\keyword{loess}
+\keyword{nonparametric}
+####$$$$ mFilter\man/mFilter-methods.Rd
+\name{mFilter-methods}
+\alias{mFilter-methods}
+\alias{residuals.mFilter}
+\alias{fitted.mFilter}
+\alias{print.mFilter}
+\alias{plot.mFilter}
+\alias{summary.mFilter}
+
+\title{Methods for mFilter objects}
+
+\description{
+  Common methods for all \code{mFilter} objects usually created by the
+  \code{mFilter} function.
+}
+
+\usage{
+\method{residuals}{mFilter}(object, \dots)
+\method{fitted}{mFilter}(object, \dots)
+\method{print}{mFilter}(x, digits = max(3, getOption("digits") - 3), \dots)
+\method{plot}{mFilter}(x, reference.grid = TRUE, col = "steelblue", ask=interactive(), \dots)
+\method{summary}{mFilter}(object, digits = max(3, getOption("digits") - 3), \dots)
+}
+
+\arguments{
+  \item{object, x}{an object of class \code{"mFilter"}; usually, a result
+    of a call to \code{\link{mFilter}}.}
+  \item{digits}{number of digits used for printing (see \code{\link{print}}).}
+  \item{col}{color of the graph (see \code{\link{plot}}).}
+  \item{ask}{logical. if \code{TRUE} the user is asked for input before a new
+    graph drawn in an interactive session (see \code{\link{interactive}}).}
+  \item{reference.grid}{logical. if true grid lines are drawn.}
+  \item{\dots}{further arguments passed to or from other methods.} 
+}
+
+\value{
+  for \code{residuals} and \code{fitted} a univariate time series;
+  for \code{plot}, \code{print}, and \code{summary} the   "\code{mFilter}"
+  object.
+}
+
+\author{
+  Mehmet Balcilar, \email{mbalcilar@yahoo.com}
+}
+
+\seealso{
+  \code{\link{mFilter}} for the function that returns an objects of class \code{"mFilter"}.
+  Other functions which return objects of class \code{"mFilter"} are
+  \code{\link{bkfilter}},
+  \code{\link{bwfilter}},
+  \code{\link{cffilter}},
+  \code{\link{bkfilter}},
+  \code{\link{trfilter}}.
+}
+
+\examples{
+## library(mFilter)
+
+data(unemp)
+
+opar <- par(no.readonly=TRUE)
+
+unemp.hp <- mFilter(unemp,filter="HP")  # Hodrick-Prescott filter
+print(unemp.hp)
+summary(unemp.hp)
+residuals(unemp.hp)
+fitted(unemp.hp)
+plot(unemp.hp)
+
+par(opar)
+}
+
+\keyword{ts}
+\keyword{smooth}
+\keyword{loess}
+\keyword{nonparametric}
+
+
+####$$$$ mFilter\man/mFilter-package.Rd
+\name{mFilter-package}
+\alias{mFilter-package}
+%\alias{mFilter}
+
+\title{
+  Getting started with the mFilter package
+}
+
+\description{
+  Getting started with the mFilter package
+}
+
+\details{
+This package provides some tools for decomposing time series into
+trend (smooth) and cyclical (irregular) components. The package implements come commonly used
+filters such as the Hodrick-Prescott, Baxter-King and Christiano-Fitzgerald
+filter.
+
+For loading the package, type:
+
+\code{library(mFilter)}
+
+A good place to start learning the package usage is to examine examples for
+the \code{mFilter} function. At the R prompt, write:
+
+\code{example("mFilter")}
+
+For a full list of functions exported by the package, type:
+
+\code{ls("package:mFilter")}
+
+Each exported function has a corresponding man page (some man pages are
+common to more functions). Display it by typing
+
+\code{help(functionName)}.
+
+Almost all filters in this package can be put into the following
+framework. Given a time series \eqn{\{x_t\}^T_{t=1}} we are interested
+in isolating component of \eqn{x_t}, denoted \eqn{y_t} with period of
+oscillations between \eqn{p_l} and \eqn{p_u}, where \eqn{2
+  \le p_l < p_u < \infty}. 
+
+Consider the following decomposition of the time series
+\deqn{x_t = y_t + \bar{x}_t}
+The component \eqn{y_t} is assumed to have power only in the frequencies
+in the interval \eqn{\{(a,b) \cup (-a,-b)\} \in (-\pi, \pi)}. \eqn{a}
+and \eqn{b} are related to \eqn{p_l} and \eqn{p_u} by
+\deqn{a=\frac{2 \pi}{p_u}\ \ \ \ \ {b=\frac{2 \pi}{p_l}}}
+
+If infinite amount of data is available, then we can use the ideal
+bandpass filter
+\deqn{y_t = B(L)x_t}
+where the filter, \eqn{B(L)}, is given in terms of the lag operator
+\eqn{L} and defined as
+\deqn{B(L) = \sum^\infty_{j=-\infty} B_j L^j, \ \ \ L^k x_t = x_{t-k}}
+The ideal bandpass filter weights are given by
+\deqn{B_j = \frac{\sin(jb)-\sin(ja)}{\pi j}}
+\deqn{B_0=\frac{b-a}{\pi}}
+The finite sample approximation to the ideal bandpass filter uses the
+alternative filter
+\deqn{y_t = \hat{B}(L)x_t=\sum^{n_2}_{j=-n_1}\hat{B}_{t,j} x_{t+j}}
+Here the weights, \eqn{\hat{B}_{t,j}}, of the approximation is a
+solution to
+\deqn{\hat{B}_{t,j}= \arg \min E \{ (y_t-\hat{y}_t)^2 \}}
+The Christiano-Fitzgerald filter is a finite data approximation to the
+ideal bandpass filter and minimizes the mean squared error defined in the
+above equation.
+
+Several band-pass approximation strategies can be selected in the
+function \code{cffilter}. The default setting of \code{cffilter} returns
+the filtered data \eqn{\hat{y_t}} associated with the unrestricted optimal filter
+assuming no unit root, no drift and an iid filter.
+
+If \code{theta} is not equal to 1 the series is assumed to follow a
+moving average process. The moving average weights are given by \code{theta}. The default is
+\code{theta=1} (iid series). If \code{theta}\eqn{=(\theta_1, \theta_2, \dots)} then
+the series is assumed to be
+\deqn{x_t = \mu + 1_{root} x_{t-1} + \theta_1 e_t + \theta_2 e_{t-1} + \dots}
+where \eqn{1_{root}=1} if the option \code{root=1} and \eqn{1_{root}=0}
+if the option \code{root=0}, and \eqn{e_t} is a white noise.
+
+The Baxter-King filter is a finite data approximation to the
+ideal bandpass filter with following moving average weights
+\deqn{y_t = \hat{B}(L)x_t=\sum^{n}_{j=-n}\hat{B}_{j} x_{t+j}=\hat{B}_0
+  x_t + \sum^{n}_{j=1} \hat{B}_j (x_{t-j}+x_{t+j})}
+where
+\deqn{\hat{B}_j=B_j-\frac{1}{2n+1}\sum^{n}_{j=-n} B_{j}}
+
+The Hodrick-Prescott filter obtains the filter weights \eqn{\hat{B}_j}
+as a solution to 
+\deqn{\hat{B}_{j}= \arg \min E \{ (y_t-\hat{y}_t)^2 \} = \arg \min
+\left\{ \sum^{T}_{t=1}(y_t-\hat{y}_{t})^2 + \lambda\sum^{T-1}_{t=2}(\hat{y}_{t+1}-2\hat{y}_{t}+\hat{y}_{t-1})^2 \right\}}
+
+The Hodrick-Prescott filter is a finite data approximation with
+following moving average weights 
+\deqn{\hat{B}_j=\frac{1}{2\pi}\int^{\pi}_{-\pi}
+\frac{4\lambda(1-\cos(\omega))^2}{1+4\lambda(1-\cos(\omega))^2}e^{i \omega
+j}  d \omega}
+
+The digital version of the Butterworth highpass filter is described by the
+rational polynomial expression (the filter's z-transform)
+\deqn{\frac{\lambda(1-z)^n(1-z^{-1})^n}{(1+z)^n(1+z^{-1})^n+\lambda(1-z)^n(1-z^{-1})^n}}
+The time domain version can be obtained by substituting \eqn{z} for the
+lag operator \eqn{L}.
+
+Pollock (2000) derives a specialized finite-sample version of the Butterworth
+filter on the basis of signal extraction theory. Let \eqn{s_t} be the
+trend and \eqn{c_t} cyclical component of \eqn{y_t}, then these
+components are extracted as
+\deqn{y_t=s_t+c_t=\frac{(1+L)^n}{(1-L)^d}\nu_t+(1-L)^{n-d}\varepsilon_t}
+where \eqn{\nu_t \sim N(0,\sigma_\nu^2)} and \eqn{\varepsilon_t \sim
+  N(0,\sigma_\varepsilon^2)}.
+
+Let \eqn{T} be even and define \eqn{n_1=T/p_u} and \eqn{n_2=T/p_l}. The
+trigonometric regression filter is based on the following relation
+\deqn{{y}_t=\sum^{n_1}_{j=n_2}\left\{ a_j \cos(\omega_j t) + b_j
+    \sin(\omega_j t) \right\}}
+where \eqn{a_j} and \eqn{b_j} are the coefficients obtained by
+regressing \eqn{x_t} on the indicated sine and cosine
+functions. Specifically,
+
+\eqn{a_j=\frac{T}{2}\sum^{T}_{t=1}\cos(\omega_j t) x_t,\ \ \ }   for
+\eqn{j=1,\dots,T/2-1}
+
+\eqn{a_j=\frac{T}{2}\sum^{T}_{t=1}\cos(\pi t) x_t,\ \ \ }    for \eqn{j=T/2}
+
+and
+
+\eqn{b_j=\frac{T}{2}\sum^{T}_{t=1}\sin(\omega_j t) x_t,\ \ \ }    for
+\eqn{j=1,\dots,T/2-1}
+
+\eqn{b_j=\frac{T}{2}\sum^{T}_{t=1}\sin(\pi t) x_t,\ \ \ }   for \eqn{j=T/2}
+
+Let \eqn{\hat{B}(L) x_t} be the trigonometric regression filter. It can
+be showed that \eqn{\hat{B}(1)=0}, so that \eqn{\hat{B}(L)} has a unit
+root for \eqn{t=1,2,\dots,T}. Also, when \eqn{\hat{B}(L)} is symmetric,
+it has a second unit root in the middle of the data for
+\eqn{t}. Therefore it is important to drift adjust data before it is
+filtered with a trigonometric regression filter.
+
+If \code{drift=TRUE} the drift adjusted series is obtained as
+\deqn{\tilde{x}_{t}=x_t-t\left(\frac{x_{T}-x_{1}}{T-1}\right), \ \ t=0,1,\dots,T-1}
+where \eqn{\tilde{x}_{t}} is the undrifted series.
+}
+
+
+\references{
+M. Baxter and R.G. King. Measuring business cycles: Approximate bandpass
+filters. The Review of Economics and Statistics, 81(4):575-93, 1999.
+
+L. Christiano and T.J. Fitzgerald. The bandpass filter. International Economic
+Review, 44(2):435-65, 2003.
+
+J. D. Hamilton. \emph{Time series analysis.} Princeton, 1994.
+
+R.J. Hodrick and E.C. Prescott. Postwar US business cycles: an empirical
+investigation. Journal of Money, Credit, and Banking, 29(1):1-16, 1997.
+
+R.G. King and S.T. Rebelo. Low frequency filtering and real business cycles.
+Journal of Economic Dynamics and Control, 17(1-2):207-31, 1993.
+
+D.S.G. Pollock. Trend estimation and de-trending via rational square-wave
+filters. Journal of Econometrics, 99:317-334, 2000.
+}
+
+
+\author{
+  Mehmet Balcilar, \email{mbalcilar@yahoo.com}
+}
+
+\seealso{
+\code{\link{mFilter-methods}} for listing all currently
+available \code{mFilter} methods. For help on common interface function
+"\code{mFilter}", \code{\link{mFilter}}. For individual filter function
+usage, \code{\link{bwfilter}}, \code{\link{bkfilter}},
+\code{\link{cffilter}}, \code{\link{hpfilter}}, \code{\link{trfilter}}.
+}
+    
+\keyword{ts}
+\keyword{smooth}
+\keyword{loess}
+\keyword{nonparametric}
+
+####$$$$ mFilter\man/mFilter.Rd
+\name{mFilter}
+\alias{mFilter}
+\alias{mFilter.default}
+\alias{mFilter.ts}
+%\alias{print.mFilter}
+%\alias{summary.mFilter}
+%\alias{plot.mFilter}
+
+\title{
+  Decomposition of a time series into trend and cyclical components
+  using various filters
+}
+
+\description{
+  \code{mFilter} is a generic function for filtering
+time series data.  The function invokes particular
+\emph{filters} which depend on filter type specified via its argument
+\code{filter}. The filters implemented in the package \code{mFilter}
+package are useful for smoothing, and estimating tend and cyclical components.
+Some of these filters are commonly used in economics and
+finance for estimating cyclical component of time series. 
+
+The \code{mFilter} currently applies only to time series
+objects. However a default method is available and should work for any
+\code{\link[base]{numeric}} or \code{\link[base]{vector}} object.
+}
+
+\details{
+  The default behaviour is to apply the default filter to
+  \code{\link[stats]{ts}} objects.
+}
+
+\usage{
+  mFilter(x, \dots)
+  \method{mFilter}{default}(x, \dots)
+  \method{mFilter}{ts}(x, filter=c("HP","BK","CF","BW","TR"), \dots)
+}
+
+\arguments{
+  \item{x}{a regular a time series.}
+  
+  \item{filter}{filter type, the filter types are \code{"HP"}
+  (Hodrick-Prescott), \code{"BK"} (Baxter-King), \code{"CF"}
+  (Christiano-Fitzgerald), \code{"BW"} (Butterworth), and \code{"TR"}
+  (trigonometric regression).}
+
+\item{...}{Additional arguments to pass to the relevant filter
+  functions. These are passed to \code{hpfilter},  \code{bkfilter},
+  \code{cffilter}, \code{bwfilter}, and \code{trfilter}, respectively for
+  the \code{"HP"}, \code{"BK"}, \code{"CF"}, \code{"BW"}, and \code{"TR"} filters.}
+}
+
+\value{
+  An object of class "\code{mFilter}".
+
+The function \code{summary} is used to obtain and print a summary of the
+results, while the function \code{plot} produces a plot of the original
+series, the trend, and the cyclical components. The function \code{print} is also available
+for displaying estimation results.
+
+The generic accessor functions \code{fitted} and \code{residuals}
+extract estimated trend and cylclical componets of an "\code{mFilter}"
+object, respectively.
+
+An object of class "\code{mFilter}" is a list containing at least the following elements:
+\item{cycle}{Estimated cyclical (irregular) component of the series.}
+\item{trend}{Estimated trend (smooth) component of the series.}
+\item{fmatrix}{The filter matrix applied to original series.}
+\item{method}{The method, if available, for the filter type applied.}
+\item{type}{The filter type applied to the series.}
+\item{call}{Call to the function.}
+\item{title}{The title for displaying results.}
+\item{xname}{Name of the series passed to \code{mFilter} for filtering.}
+\item{x}{The original or drift adjusted, if \code{drift=TRUE}, time series passed to the \code{mFilter}.}
+
+Following additional elements may exists depending on the type of filter
+applied:
+\item{nfix}{Length or order of the fixed length filters.}
+\item{pl}{Minimum period of oscillation of desired component (2<=pl).}
+\item{pu}{Maximum period of oscillation of desired component (2<=pl<pu<infinity).}
+\item{lambda}{Lambda (smoothness) parameter of the HP filter.}
+\item{root}{Whether time series has a unit root, TRUE or FALSE (default).}
+\item{drift}{Whether time series has drift, TRUE or FALSE (default).}
+\item{theta}{MA coefficients for time series model, used in \code{"CF"} filter.}
+}
+
+\seealso{
+  Other functions which return objects of class \code{"mFilter"} are
+  \code{\link{bkfilter}},
+  \code{\link{bwfilter}},
+  \code{\link{cffilter}},
+  \code{\link{bkfilter}},
+  \code{\link{trfilter}}.
+    Following functions apply the relevant methods to an object of the
+    \code{"mFilter"} class:
+  \code{\link{print.mFilter}},
+  \code{\link{summary.mFilter}},
+  \code{\link{plot.mFilter}},
+  \code{\link{fitted.mFilter}},
+  \code{\link{residuals.mFilter}}.
+}
+
+\author{
+  Mehmet Balcilar, \email{mbalcilar@yahoo.com}
+}
+
+\examples{
+## library(mFilter)
+
+data(unemp)
+
+opar <- par(no.readonly=TRUE)
+
+unemp.hp <- mFilter(unemp,filter="HP")  # Hodrick-Prescott filter
+print(unemp.hp)
+summary(unemp.hp)
+residuals(unemp.hp)
+fitted(unemp.hp)
+plot(unemp.hp)
+
+unemp.bk <- mFilter(unemp,filter="BK")  # Baxter-King filter
+unemp.cf <- mFilter(unemp,filter="CF")  # Christiano-Fitzgerald filter
+unemp.bw <- mFilter(unemp,filter="BW")  # Butterworth filter
+unemp.tr <- mFilter(unemp,filter="TR")  # Trigonometric regression filter
+
+par(mfrow=c(2,1),mar=c(3,3,2,1),cex=.8)
+plot(unemp,main="Unemployment Series & Estimated Trend", col=1, ylab="")
+lines(unemp.hp$trend,col=2)
+lines(unemp.bk$trend,col=3)
+lines(unemp.cf$trend,col=4)
+lines(unemp.bw$trend,col=5)
+lines(unemp.tr$trend,col=6)
+
+legend("topleft",legend=c("series", "HP","BK","CF","BW","TR"),
+    col=1:6,lty=rep(1,6),ncol=2)
+
+plot(unemp.hp$cycle,main="Estimated Cyclical Component",
+     ylim=c(-2,2.5),col=2,ylab="")
+lines(unemp.bk$cycle,col=3)
+lines(unemp.cf$cycle,col=4)
+lines(unemp.bw$cycle,col=5)
+lines(unemp.tr$cycle,col=6)
+## legend("topleft",legend=c("HP","BK","CF","BW","TR"),
+## col=2:6,lty=rep(1,5),ncol=2)
+
+unemp.cf1 <- mFilter(unemp,filter="CF", drift=TRUE, root=TRUE)
+unemp.cf2 <- mFilter(unemp,filter="CF", pl=8,pu=40,drift=TRUE, root=TRUE)
+unemp.cf3 <- mFilter(unemp,filter="CF", pl=2,pu=60,drift=TRUE, root=TRUE)
+unemp.cf4 <- mFilter(unemp,filter="CF", pl=2,pu=40,drift=TRUE, 
+             root=TRUE,theta=c(.1,.4))
+
+plot(unemp,
+main="Christiano-Fitzgerald filter of unemployment: Trend \n root=TRUE,drift=TRUE", 
+      col=1, ylab="")
+lines(unemp.cf1$trend,col=2)
+lines(unemp.cf2$trend,col=3)
+lines(unemp.cf3$trend,col=4)
+lines(unemp.cf4$trend,col=5)
+legend("topleft",legend=c("series", "pl=2, pu=32", "pl=8, pu=40", 
+"pl=2, pu=60", "pl=2, pu=40, theta=.1,.4"), col=1:5, lty=rep(1,5), ncol=1)
+
+plot(unemp.cf1$cycle,
+main="Christiano-Fitzgerald filter of unemployment: Cycle \n root=TRUE,drift=TRUE", 
+     col=2, ylab="", ylim=range(unemp.cf3$cycle))
+lines(unemp.cf2$cycle,col=3)
+lines(unemp.cf3$cycle,col=4)
+lines(unemp.cf4$cycle,col=5)
+## legend("topleft",legend=c("pl=2, pu=32", "pl=8, pu=40", "pl=2, pu=60",
+## "pl=2, pu=40, theta=.1,.4"), col=2:5, lty=rep(1,4), ncol=2)
+
+par(opar)
+}
+
+\keyword{ts}
+\keyword{smooth}
+\keyword{loess}
+\keyword{nonparametric}
+
+####$$$$ mFilter\man/trfilter.Rd
+\name{trfilter}
+\alias{trfilter}
+
+\title{
+  Trigonometric regression filter of a time series
+}
+
+\description{
+  This function uses trigonometric regression filter for estimating cyclical
+  and trend components of a time series. The function computes cyclical
+  and trend components of the time series using a lower and upper cut-off
+  frequency in the spirit of a band pass filter.
+}
+
+\usage{
+trfilter(x,pl=NULL,pu=NULL,drift=FALSE)
+}
+
+\arguments{
+  \item{x}{a regular time series.}
+
+  \item{pl}{integer. minimum period of oscillation of desired component
+  (pl<=2).}
+
+  \item{pu}{integer. maximum period of oscillation of desired component
+  (2<=pl<pu<infinity).}
+
+  \item{drift}{logical, \code{FALSE} if no drift in time series
+    (default),  \code{TRUE} if drift in time series.}
+}
+
+\details{
+  Almost all filters in this package can be put into the
+following framework. Given a time series \eqn{\{x_t\}^T_{t=1}} we are
+interested in isolating component of \eqn{x_t}, denoted \eqn{y_t} with
+period of oscillations between \eqn{p_l} and \eqn{p_u}, where \eqn{2
+  \le p_l < p_u < \infty}. 
+
+Consider the following decomposition of the time series
+\deqn{x_t = y_t + \bar{x}_t}
+The component \eqn{y_t} is assumed to have power only in the frequencies
+in the interval \eqn{\{(a,b) \cup (-a,-b)\} \in (-\pi, \pi)}. \eqn{a}
+and \eqn{b} are related to \eqn{p_l} and \eqn{p_u} by
+\deqn{a=\frac{2 \pi}{p_u}\ \ \ \ \ {b=\frac{2 \pi}{p_l}}}
+
+If infinite amount of data is available, then we can use the ideal
+bandpass filter
+\deqn{y_t = B(L)x_t}
+where the filter, \eqn{B(L)}, is given in terms of the lag operator
+\eqn{L} and defined as
+\deqn{B(L) = \sum^\infty_{j=-\infty} B_j L^j, \ \ \ L^k x_t = x_{t-k}}
+The ideal bandpass filter weights are given by
+\deqn{B_j = \frac{\sin(jb)-\sin(ja)}{\pi j}}
+\deqn{B_0=\frac{b-a}{\pi}}
+
+Let \eqn{T} be even and define \eqn{n_1=T/p_u} and \eqn{n_2=T/p_l}. The
+trigonometric regression filter is based on the following relation
+\deqn{{y}_t=\sum^{n_1}_{j=n_2}\left\{ a_j \cos(\omega_j t) + b_j
+    \sin(\omega_j t) \right\}}
+where \eqn{a_j} and \eqn{b_j} are the coefficients obtained by
+regressing \eqn{x_t} on the indicated sine and cosine
+functions. Specifically,
+
+\eqn{a_j=\frac{T}{2}\sum^{T}_{t=1}\cos(\omega_j t) x_t,\ \ \ }    for
+\eqn{j=1,\dots,T/2-1}
+
+\eqn{a_j=\frac{T}{2}\sum^{T}_{t=1}\cos(\pi t) x_t,\ \ \ }    for \eqn{j=T/2}
+
+and
+
+\eqn{b_j=\frac{T}{2}\sum^{T}_{t=1}\sin(\omega_j t) x_t,\ \ \ }    for
+\eqn{j=1,\dots,T/2-1}
+
+\eqn{b_j=\frac{T}{2}\sum^{T}_{t=1}\sin(\pi t) x_t,\ \ \ }    for \eqn{j=T/2}
+
+Let \eqn{\hat{B}(L) x_t} be the trigonometric regression filter. It can
+be showed that \eqn{\hat{B}(1)=0}, so that \eqn{\hat{B}(L)} has a unit
+root for \eqn{t=1,2,\dots,T}. Also, when \eqn{\hat{B}(L)} is symmetric,
+it has a second unit root in the middle of the data for
+\eqn{t}. Therefore it is important to drift adjust data before it is
+filtered with a trigonometric regression filter.
+
+If \code{drift=TRUE} the drift adjusted series is obtained as
+\deqn{\tilde{x}_{t}=x_t-t\left(\frac{x_{T}-x_{1}}{T-1}\right), \ \ t=0,1,\dots,T-1}
+where \eqn{\tilde{x}_{t}} is the undrifted series.
+}
+
+\value{
+  A "\code{mFilter}" object (see \code{\link{mFilter}}).
+}
+
+\references{
+M. Baxter and R.G. King. Measuring business cycles: Approximate bandpass
+filters. The Review of Economics and Statistics, 81(4):575-93, 1999.
+
+L. Christiano and T.J. Fitzgerald. The bandpass filter. International Economic
+Review, 44(2):435-65, 2003.
+
+J. D. Hamilton. \emph{Time series analysis.} Princeton, 1994.
+
+R.J. Hodrick and E.C. Prescott. Postwar US business cycles: an empirical
+investigation. Journal of Money, Credit, and Banking, 29(1):1-16, 1997.
+
+R.G. King and S.T. Rebelo. Low frequency filtering and real business cycles.
+Journal of Economic Dynamics and Control, 17(1-2):207-31, 1993.
+
+D.S.G. Pollock. Trend estimation and de-trending via rational square-wave
+filters. Journal of Econometrics, 99:317-334, 2000.
+}
+
+\author{
+  Mehmet Balcilar, \email{mbalcilar@yahoo.com}
+}
+
+\seealso{
+  \code{\link{mFilter}}, \code{\link{hpfilter}}, \code{\link{cffilter}},
+  \code{\link{bkfilter}}, \code{\link{bwfilter}}
+}
+
+\examples{
+## library(mFilter)
+
+data(unemp)
+
+opar <- par(no.readonly=TRUE)
+
+unemp.tr <- trfilter(unemp, drift=TRUE)
+plot(unemp.tr)
+unemp.tr1 <- trfilter(unemp, drift=TRUE)
+unemp.tr2 <- trfilter(unemp, pl=8,pu=40,drift=TRUE)
+unemp.tr3 <- trfilter(unemp, pl=2,pu=60,drift=TRUE)
+unemp.tr4 <- trfilter(unemp, pl=2,pu=40,drift=TRUE)
+
+par(mfrow=c(2,1),mar=c(3,3,2,1),cex=.8)
+plot(unemp.tr1$x,
+main="Trigonometric regression filter of unemployment: Trend, drift=TRUE",
+     col=1, ylab="")
+lines(unemp.tr1$trend,col=2)
+lines(unemp.tr2$trend,col=3)
+lines(unemp.tr3$trend,col=4)
+lines(unemp.tr4$trend,col=5)
+legend("topleft",legend=c("series", "pl=2, pu=32", "pl=8, pu=40", 
+"pl=2, pu=60", "pl=2, pu=40"), col=1:5, lty=rep(1,5), ncol=1)
+
+plot(unemp.tr1$cycle,
+main="Trigonometric regression filter of unemployment: Cycle,drift=TRUE", 
+     col=2, ylab="", ylim=range(unemp.tr3$cycle,na.rm=TRUE))
+lines(unemp.tr2$cycle,col=3)
+lines(unemp.tr3$cycle,col=4)
+lines(unemp.tr4$cycle,col=5)
+## legend("topleft",legend=c("pl=2, pu=32", "pl=8, pu=40", "pl=2, pu=60",
+## "pl=2, pu=40"), col=1:5, lty=rep(1,5), ncol=1)
+
+par(opar)
+}
+
+\keyword{ts}
+\keyword{smooth}
+\keyword{loess}
+\keyword{nonparametric}
+####$$$$ mFilter\man/unemp.Rd
+\name{unemp}
+\alias{unemp}
+\title{US Quarterly Unemployment Series}
+
+\usage{
+data(unemp)
+}
+
+\description{
+  Quarterly US unemployment series for 1959.1 to 2000.4.
+
+  \emph{number of observations} :  168
+
+  \emph{observation} :  country
+
+  \emph{country} :  United States
+}
+
+\format{A time series containing :
+  \describe{
+    \item{unemp}{unemployment rate (average of months in quarter)       }
+  }
+}
+
+\source{
+  Bureau of Labor Statistics, OECD, Federal Reserve.
+}
+
+\references{
+  Stock, James H.  and  Mark W.  Watson (2003) \emph{Introduction to
+  Econometrics}, Addison-Wesley Educational Publishers,
+\url{http://wps.aw.com/aw_stockwatsn_economtrcs_1}, chapter 12 and 14.
+}
+
+\author{
+  Mehmet Balcilar, \email{mbalcilar@yahoo.com}
+}
+
+\examples{
+## library(mFilter)
+
+data(unemp)
+
+unemp.hp <- mFilter(unemp,filter="HP")  # Hodrick-Prescott filter
+unemp.bk <- mFilter(unemp,filter="BK")  # Baxter-King filter
+unemp.cf <- mFilter(unemp,filter="CF")  # Christiano-Fitzgerald filter
+
+opar <- par(no.readonly=TRUE)
+par(mfrow=c(2,1),mar=c(3,3,2,1))
+plot(unemp,main="Unemployment Series & Estimated Trend",col=1,ylab="")
+lines(unemp.hp$trend,col=2)
+lines(unemp.bk$trend,col=3)
+lines(unemp.cf$trend,col=4)
+legend("topleft",legend=c("series", "HP","BK","CF"),col=1:4,
+       lty=rep(1,4),ncol=2)
+
+plot(unemp.hp$cycle,main="Estimated Cyclical Component",col=2,
+     ylim=c(-2,2),ylab="")
+lines(unemp.bk$cycle,col=3)
+lines(unemp.cf$cycle,col=4)
+legend("topleft",legend=c("HP","BK","CF"),col=2:4,lty=rep(1,3),ncol=2)
+par(opar)
+}
+
+\keyword{datasets}
+####$$$$ mFilter\R/bkfilter.R
+### Baxter-King filter
+bkfilter <- function(x,pl=NULL,pu=NULL,nfix=NULL,type=c("fixed","variable"),drift=FALSE)
+{
+    if(is.null(drift)) drift <- FALSE
+    xname=deparse(substitute(x))
+    type = match.arg(type)
+
+    if(is.null(type)) type <- "fixed"
+
+    if(is.ts(x))
+        freq=frequency(x)
+    else
+        freq=1
+
+    if(is.null(pl))
+    {
+        if(freq > 1)
+            pl=trunc(freq*1.5)
+        else
+            pl=2
+    }
+
+    if(is.null(pu))
+        pu=trunc(freq*8)
+
+    b = 2*pi/pl
+    a = 2*pi/pu
+
+    n = length(x)
+
+    if(n<5)
+        warning("# of observations in Baxter-King filter < 5")
+
+    if(pu<=pl)
+        stop("pu must be larger than pl")
+    if(pl<2)
+    {
+        warning("in Baxter-King kfilter, pl less than 2 , reset to 2")
+        pl = 2
+    }
+
+    if(is.null(nfix))
+        nfix = freq*3
+
+    if(nfix>=n/2)
+        stop("fixed lag length must be < n/2")
+
+    j = 1:(2*n)
+    B = as.matrix(c((b-a)/pi,(sin(j*b)-sin(j*a))/(j*pi)))
+
+    AA = matrix(0,n,n)
+
+    if(type=="fixed")
+    {
+        bb = matrix(0,2*nfix+1,1)
+        bb[(nfix+1):(2*nfix+1)] = B[1:(nfix+1)]
+        bb[nfix:1] = B[2:(nfix+1)]
+        bb = bb-sum(bb)/(2*nfix+1)
+
+        for(i in (nfix+1):(n-nfix))
+            AA[i,(i-nfix):(i+nfix)] = t(bb)
+    }
+
+    if(type=="variable")
+    {
+        for(i in (nfix+1):(n-nfix))
+        {
+            j=min(c(i-1,n-i))
+            bb=matrix(0,2*j+1,1)
+            bb[(j+1):(2*j+1)] = B[1:(j+1)]
+            bb[j:1] = B[2:(j+1)]
+            bb = bb-sum(bb)/(2*j+1)
+            AA[i,(i-j):(i+j)] = t(bb)
+        }
+    }
+    xo = x
+    x = as.matrix(x)
+    if(drift)
+        x = undrift(x)
+
+    x.cycle = AA%*%as.matrix(x)
+    x.cycle[c(1:nfix,(n-nfix+1):n)] = NA
+    x.trend = x-x.cycle
+    if(is.ts(xo))
+    {
+        tsp.x = tsp(xo)
+        x.cycle=ts(x.cycle,star=tsp.x[1],frequency=tsp.x[3])
+        x.trend=ts(x.trend,star=tsp.x[1],frequency=tsp.x[3])
+        x=ts(x,star=tsp.x[1],frequency=tsp.x[3])
+    }
+    res <- list(cycle=x.cycle,trend=x.trend,fmatrix=AA,title="Baxter-King Filter",
+                xname=xname,call=as.call(match.call()),
+                type=type,pl=pl,pu=pu,nfix=nfix,method="bkfilter",x=x)
+
+    return(structure(res,class="mFilter"))
+}
+####$$$$ mFilter\R/bwfilter.R
+### Butterworth filter
+bwfilter <- function(x,freq=NULL,nfix=NULL,drift=FALSE)
+{
+
+    if(is.null(drift)) drift <- TRUE
+    xname=deparse(substitute(x))
+    if(is.ts(x))
+        frx=frequency(x)
+    else
+        frx=1
+
+    if(is.null(freq))
+    {
+        if(frx > 1)
+            freq=trunc(frx*2.5)
+        else
+            freq=2
+    }
+
+    if(is.null(nfix))
+        nfix = 2
+
+    xo = x
+    x = as.matrix(x)
+    if(drift)
+        x = undrift(x)
+
+    n = length(x)
+
+    cut.off = 2*pi/freq
+    mu = (1/tan(cut.off/2))^(2*nfix)
+
+    imat = diag(n)
+    Ln = rbind(matrix(0,1,n),diag(1,n-1,n))
+    Ln = imat-Ln
+    if(nfix > 1)
+    {
+        for(i in 1:(nfix-1))
+            Ln = (imat-Ln)%*%Ln
+    }
+    Q  = t(Ln[3:n,])
+    SIGMA.R = t(Q)%*%Q
+    SIGMA.n = abs(SIGMA.R)
+    g = t(Q)%*%as.matrix(x)
+    b = solve(SIGMA.n+mu*SIGMA.R,g)
+    x.cycle = c(mu*Q%*%b)
+        x.trend = x-x.cycle
+
+    if(is.ts(xo))
+    {
+        tsp.x = tsp(xo)
+        x.cycle=ts(x.cycle,star=tsp.x[1],frequency=tsp.x[3])
+        x.trend=ts(x.trend,star=tsp.x[1],frequency=tsp.x[3])
+        x=ts(x,star=tsp.x[1],frequency=tsp.x[3])
+    }
+    A = mu*Q%*%solve(SIGMA.n+mu*SIGMA.R)%*%t(Q)
+
+        if(is.ts(xo))
+    {
+        tsp.x = tsp(xo)
+        x.cycle=ts(x.cycle,star=tsp.x[1],frequency=tsp.x[3])
+        x.trend=ts(x.trend,star=tsp.x[1],frequency=tsp.x[3])
+        x=ts(x,star=tsp.x[1],frequency=tsp.x[3])
+    }
+
+    res <- list(cycle=x.cycle,trend=x.trend,fmatrix=A,title="Butterworth Filter",
+                xname=xname,call=as.call(match.call()),
+                type="asymmetric",lambda=mu,nfix=nfix,freq=freq,method="bwfilter",x=x)
+
+    return(structure(res,class="mFilter"))
+}
+####$$$$ mFilter\R/cffilter.R
+### Christiano-Fitzgerald filter
+cffilter <- function(x,pl=NULL,pu=NULL,root=FALSE,drift=FALSE,
+                     type=c("asymmetric","symmetric","fixed","baxter-king",
+                     "trigonometric"),nfix=NULL,theta=1)
+{
+
+    type = match.arg(type)
+    if(is.null(root)) root <- FALSE
+    if(is.null(drift)) drift <- FALSE
+    if(is.null(theta)) theta <- 1
+    if(is.null(type)) type <- "asymmetric"
+
+    if(is.ts(x))
+        freq=frequency(x)
+    else
+        freq=1
+
+    if(is.null(pl))
+    {
+        if(freq > 1)
+            pl=trunc(freq*1.5)
+        else
+            pl=2
+    }
+
+    if(is.null(pu))
+        pu=trunc(freq*8)
+
+    if(is.null(nfix))
+        nfix = freq*3
+
+    nq=length(theta)-1;
+    b=2*pi/pl;
+    a=2*pi/pu;
+
+    xname=deparse(substitute(x))
+    xo = x
+    x = as.matrix(x)
+    n = nrow(x)
+    nvars = ncol(x)
+
+    if(n < 5)
+        warning("# of observations < 5")
+
+    if(n < (2*nq+1))
+        stop("# of observations must be at least 2*q+1")
+
+    if(pu <= pl)
+        stop("pu must be larger than pl")
+
+    if(pl < 2)
+    {
+        warning("pl less than 2 , reset to 2")
+        pl = 2
+    }
+
+    if(root != 0 && root != 1)
+        stop("root must be 0 or 1")
+
+    if(drift<0 || drift > 1)
+        stop("drift must be 0 or 1")
+
+    if((type == "fixed" || type == "baxter-king") && nfix < 1)
+        stop("fixed lag length must be >= 1")
+
+    if(type == "fixed" & nfix < nq)
+        stop("fixed lag length must be >= q")
+
+    if((type == "fixed" || type == "baxter-king") && nfix >= n/2)
+        stop("fixed lag length must be < n/2")
+
+    if(type == "trigonometric" && (n-2*floor(n/2)) != 0)
+        stop("trigonometric regressions only available for even n")
+
+    theta = as.matrix(theta)
+    m1 = nrow(theta)
+    m2 = ncol(theta)
+    if(m1 > m2)
+        th=theta
+    else
+        th=t(theta)
+
+    ##   compute g(theta)
+    ##   [g(1) g(2) .... g(2*nq+1)] correspond to [c(q),c(q-1),...,c(1),
+    ##                                        c(0),c(1),...,c(q-1),c(q)]
+    ##   cc = [c(0),c(1),...,c(q)]
+    ## ?? thp=flipud(th)
+    g=convolve(th,th,type="open")
+    cc = g[(nq+1):(2*nq+1)]
+    ##   compute "ideal" Bs
+    j = 1:(2*n)
+    B = as.matrix(c((b-a)/pi, (sin(j*b)-sin(j*a))/(j*pi)))
+    ##    compute R using closed form integral solution
+    R = matrix(0,n,1)
+    if(nq > 0)
+    {
+        R0 = B[1]*cc[1] + 2*t(B[2:(nq+1)])*cc[2:(nq+1)]
+        R[1] = pi*R0
+        for(i in 2:n)
+        {
+            dj = Bge(i-2,nq,B,cc)
+            R[i] = R[i-1] - dj
+        }
+    }
+    else
+    {
+        R0 = B[1]*cc[1]
+        R[1] = pi*R0;
+        for(j in 2:n)
+        {
+            dj = 2*pi*B[j-1]*cc[1];
+            R[j] = R[j-1] - dj;
+        }
+    }
+
+    AA = matrix(0,n,n)
+
+###  asymmetric filter
+
+    if(type == "asymmetric")
+    {
+        if(nq==0)
+        {
+            for(i in 1:n)
+            {
+                AA[i,i:n] = t(B[1:(n-i+1)])
+                if(root)
+                    AA[i,n] = R[n+1-i]/(2*pi)
+            }
+            AA[1,1] = AA[n,n]
+            ##  Use symmetry to construct bottom 'half' of AA
+            AAu = AA
+            AAu[!upper.tri(AAu)] <- 0
+            AA = AA + flipud(fliplr(AAu))
+        }
+        else
+        {
+            ## CONSTRUCT THE A MATRIX size n x n
+            A = Abuild(n,nq,g,root)
+            Ainv = solve(A)
+            ## CONSTRUCT THE d MATRIX size n x 1
+            for(np in 0:ceiling(n/2-1))
+            {
+                d = matrix(0,n,1)
+                ii = 0
+        	for(jj in (np-root):(np+1+root-n))
+                {
+                    ii = ii+1
+                    d[ii] = Bge(jj,nq,B,cc)
+                }
+                if (root == 1)
+                    d[n-1] = R[n-np]
+                ##  COMPUTE Bhat = inv(A)*d
+                Bhat = Ainv%*%d
+                AA[np+1,] = t(Bhat)
+            }
+            ##  Use symmetry to construct bottom 'half' of AA
+            AA[(ceiling(n/2)+1):n,] = flipud(fliplr(AA[1:floor(n/2),]))
+        }
+    }
+
+
+###  symmetric filter
+
+    if (type == "symmetric")
+    {
+        if(nq==0)
+        {
+            for(i in 2:ceiling(n/2))
+            {
+                np = i-1
+                AA[i,i:(i+np)] = t(B[1:(1+np)])
+                if(root)
+                    AA[i,i+np] = R[np+1]/(2*pi);
+                AA[i,(i-1):(i-np)] = AA[i,(i+1):(i+np)];
+            }
+            ##  Use symmetry to construct bottom 'half' of AA
+            AA[(ceiling(n/2)+1):n,] = flipud(fliplr(AA[1:floor(n/2),]))
+        }
+        else
+        {
+            for(np in nq:ceiling(n/2-1))
+            {
+                nf = np
+                nn = 2*np+1
+                ## CONSTRUCT THE A MATRIX size nn x nn
+                A = Abuild(nn,nq,g,root)
+                Ainv = solve(A)
+                ## CONSTRUCT THE d MATRIX size nn x 1
+                d = matrix(0,nn,1)
+                ii = 0
+                for(jj in (np-root):(-nf+root))
+                {
+                    ii = ii+1
+                    d[ii] = Bge(jj,nq,B,cc)
+                }
+                if(root)
+                    d[nn-1] = R[nf+1]
+                ##  COMPUTE Bhat = inv(A)*d
+                Bhat = Ainv%*%d
+                AA[np+1,1:(2*np+1)] = t(Bhat)
+            }
+            ##  Use symmetry to construct bottom 'half' of AA
+            AA[(ceiling(n/2)+1):n,] = flipud(fliplr(AA[1:floor(n/2),]))
+        }
+    }
+
+
+###  fixed length symmetric filter
+
+    if (type == "fixed")
+    {
+        if(nq==0)
+        {
+            bb = matrix(0,2*nfix+1,1)
+            bb[(nfix+1):(2*nfix+1)] = B[1:(nfix+1)]
+            bb[nfix:1] = B[2:(nfix+1)]
+            if(root)
+            {
+                bb[2*nfix+1] = R[nfix+1]/(2*pi)
+                bb[1] = R[nfix+1]/(2*pi)
+            }
+            for(i in (nfix+1):(n-nfix))
+                AA[i,(i-nfix):(i+nfix)] = t(bb)
+        }
+        else
+        {
+            nn = 2*nfix+1
+            ## CONSTRUCT THE A MATRIX size nn x nn
+            A = Abuild(nn,nq,g,root)
+            Ainv = solve(A)
+            ## CONSTRUCT THE d MATRIX size nn x 1
+            d = matrix(0,nn,1)
+            ii = 0
+            for(jj in (nfix-root):(-nfix+root))
+            {
+                ii = ii+1
+                d[ii] = Bge(jj,nq,B,cc)
+            }
+            if(root)
+                d[nn-1] = R[nn-nfix]
+            ##  COMPUTE Bhat = inv(A)*d
+            Bhat = Ainv%*%d
+            for(ii in (nfix+1):(n-nfix))
+                AA[ii,(ii-nfix):(ii+nfix)] = t(Bhat)
+        }
+    }
+
+###  Baxter-King filter
+
+    if (type == "baxter-king")
+    {
+        bb = matrix(0,2*nfix+1,1)
+        bb[(nfix+1):(2*nfix+1)] = B[1:(nfix+1)]
+        bb[nfix:1] = B[2:(nfix+1)]
+        bb = bb - sum(bb)/(2*nfix+1)
+        for(i in (nfix+1):(n-nfix))
+            AA[i,(i-nfix):(i+nfix)] = t(bb)
+    }
+
+###  Trigonometric Regression filter
+
+    if(type == "trigonometric")
+    {
+        jj = 1:(n/2)
+	## find frequencies in desired band omitting n/2;
+	jj = jj[((n/pu)<=jj & jj<=(n/pl) & jj<(n/2))]
+        if(!any(jj))
+	   stop("frequency band is empty in trigonometric regression")
+        om = 2*pi*jj/n
+	if(pl > 2)
+        {
+            for(t in 1:n)
+            {
+   		for(k in n:1)
+                {
+                    l = t-k
+                    tmp = sum(cos(om*l))
+                    AA[t,k] = tmp
+                }
+            }
+        }
+	else
+        {
+            for(t in 1:n)
+            {
+   		for(k in n:1)
+                {
+                    l = t-k
+                    tmp = sum(cos(om*l))
+                    tmp2 = (cos(pi*(t-l))*cos(pi*t))/2
+                    AA[t,k] = tmp + tmp2
+                }
+            }
+        }
+	AA = AA*2/n
+    }
+
+
+###  check that sum of all filters equal 0 if assuming unit root
+
+    if(root)
+    {
+        tst = max(abs(c(apply(AA,1,sum))))
+        if((tst > 1.e-09) && root)
+        {
+            warning("Bhat does not sum to 0 ")
+            cat("test =",tst,"\n")
+        }
+    }
+
+###	compute filtered time series using selected filter matrix AA
+
+    if(drift)
+        x = undrift(x)
+
+    x.cycle = AA%*%as.matrix(x)
+
+    if(type=="fixed" || type=="symmetric" || type=="baxter-king")
+    {
+        if(nfix>0)
+            x.cycle[c(1:nfix,(n-nfix+1):n)] = NA
+    }
+    x.trend = x-x.cycle
+    if(is.ts(xo))
+    {
+        tsp.x = tsp(xo)
+        x.cycle=ts(x.cycle,star=tsp.x[1],frequency=tsp.x[3])
+        x.trend=ts(x.trend,star=tsp.x[1],frequency=tsp.x[3])
+        x=ts(x,star=tsp.x[1],frequency=tsp.x[3])
+    }
+
+    if(type=="asymmetric")
+        title = "Chiristiano-Fitzgerald Asymmetric Filter"
+    if(type=="symmetric")
+        title = "Chiristiano-Fitzgerald Symmetric Filter"
+    if(type=="fixed")
+        title = "Chiristiano-Fitzgerald Fixed Length Filter"
+    if(type=="baxter-king")
+        title = "Baxter-King Fixed Length Filter"
+    if(type=="trigonometric")
+        title = "Trigonometric Regression Filter"
+
+    res <- list(cycle=x.cycle,trend=x.trend,fmatrix=AA,title=title,
+                xname=xname,call=as.call(match.call()),
+                type=type,pl=pl,pu=pu,nfix=nfix,root=root,drift=drift,
+                theta=theta,method="cffilter",x=x)
+
+    return(structure(res,class="mFilter"))
+}
+
+
+###======================================================================
+###				Functions
+###======================================================================
+
+Bge <- function(jj,nq,B,cc)
+{
+###
+###  closed form solution for integral of B(z)g(z)(1/z)^j  (eqn 16)
+###     nq > 0, jj >= 0
+###     if nq = 0, y = 2*pi*B(absj+1)*cc(1);
+###
+    absj =abs(jj)
+    if(absj >= nq)
+    {
+        dj = B[absj+1]*cc[1] + t(B[(absj+2):(absj+nq+1)])%*%cc[2:(nq+1)]
+        dj = dj + t(flipud(B[(absj-nq+1):absj]))%*%cc[2:(nq+1)]
+    }
+    else if(absj >= 1)
+    {
+        dj = B[absj+1]*cc[1] + t(B[(absj+2):(absj+nq+1)])%*%cc[2:(nq+1)]
+        dj = dj + t(flipud(B[1:absj]))%*%cc[2:(absj+1)]
+        dj = dj + t(B[2:(nq-absj+1)])%*%cc[(absj+2):(nq+1)]
+    }
+    else
+        dj = B[absj+1]*cc[1] + 2*t(B[2:(nq+1)])%*%cc[2:(nq+1)]
+
+    y = 2*pi*dj
+    return(y)
+}
+
+###
+###-----------------------------------------------------------------------
+###
+
+Abuild <- function(nn,nq,g,root)
+{
+###
+###  builds the nn x nn A matrix in A.12
+###   if root == 1 (unit root)
+###      Abig is used to construct all but the last 2 rows of the A matrix
+###   elseif root == 0 (no unit root)
+###      Abig is used to construct the entire A matrix
+###
+    if(root)
+    {
+	Abig=matrix(0,nn,nn+2*(nq-1))
+        for(j in 1:(nn-2))
+	   Abig[j,j:(j+2*nq)] = t(g)
+	A = Abig[,nq:(nn+nq-1)]
+	##   construct A(-f)
+	Q = -matrix(1,nn-1,nn)
+	##Q = tril(Q);
+        Q[upper.tri(Q)] <- 0
+	F = matrix(0,1,nn-1)
+	F[(nn-1-nq):(nn-1)] = g[1:(nq+1)]
+	A[(nn-1),] = F%*%Q
+	##    construct last row of A
+        A[nn,] = matrix(1,1,nn)
+    }
+    else
+    {
+	Abig=matrix(0,nn,nn+2*(nq-0))
+	for(j in 1:nn)
+        {
+            Abig[j,j:(j+2*nq)] = c(g)
+        }
+        A = Abig[,(nq+1):(nn+nq)]
+    }
+    ##    multiply A by 2*pi
+    A = 2*pi*A
+    return(A)
+}
+###
+###-----------------------------------------------------------------------
+###
+
+undrift <- function(x)
+{
+###
+###  This function removes the drift or a linear time trend from a time series using the formula
+###			drift = (x(n) - x(1)) / (n-1).
+###
+###  Input:  x - data matrix x where columns represent different variables, x is (n x # variables).
+###  Output: xun - data matrix same size as x with a different drift/trend removed from each variable.
+###
+    x = as.matrix(x)
+    nv = dim(x)
+    n = nv[1]
+    nvars = nv[2]
+    xun = matrix(0,n,nvars)
+    dd = as.matrix(0:(n-1))
+    for(ivar in 1:nvars)
+    {
+        drift = (x[n,ivar]-x[1,ivar]) / (n-1)
+        xun[,ivar] = x[,ivar] - dd*drift
+    }
+    if(nvars==1) xun = c(xun)
+
+    return(xun)
+}
+
+###
+###-----------------------------------------------------------------------
+###
+
+### function that reverses the columns of a matrix (matlab equivalent)
+flipud <- function(x) {apply(as.matrix(x),2,rev)}
+
+### function that reverses the rows of a matrix (matlab equivalent)
+fliplr <- function(x) {t(apply(as.matrix(x),1,rev))}
+####$$$$ mFilter\R/hpfilter.R
+### Hodrick-Prescott filter
+hpfilter <- function(x,freq=NULL,type=c("lambda","frequency"),drift=FALSE)
+{
+
+    if(is.null(drift)) drift <- FALSE
+    xname=deparse(substitute(x))
+    type=match.arg(type)
+    if(is.null(type)) type <- "lambda"
+    if(is.ts(x))
+    {
+        tsp.x <- tsp(x)
+        frq.x <- frequency(x)
+        if(type=="lambda")
+        {
+            if(is.null(freq))
+            {
+                if(frq.x==1)
+                    lambda = 6
+                if(frq.x==4)
+                    lambda = 1600
+                if(frq.x==12)
+                    lambda = 129600
+            }
+            else
+                lambda = freq
+        }
+    }
+    else
+    {
+        if(type=="lambda")
+        {
+            if(is.null(freq))
+                stop("freq is NULL")
+            else
+                lambda = freq
+        }
+    }
+    if(type=="frequency")
+    {
+        if(is.null(freq))
+            stop("freq is NULL")
+        else
+            lambda = (2*sin(pi/freq))^-4
+    }
+
+    xo = x
+    x = as.matrix(x)
+    if(drift)
+        x = undrift(x)
+
+    n = length(x)
+
+    imat = diag(n)
+    Ln = rbind(matrix(0,1,n),diag(1,n-1,n))
+    Ln = (imat-Ln)%*%(imat-Ln)
+    Q  = t(Ln[3:n,])
+    SIGMA.R = t(Q)%*%Q
+    SIGMA.n = diag(n-2)
+    g = t(Q)%*%as.matrix(x)
+    b = solve(SIGMA.n+lambda*SIGMA.R,g)
+    x.cycle = c(lambda*Q%*%b)
+    x.trend = x-x.cycle
+
+    if(is.ts(xo))
+    {
+        tsp.x = tsp(xo)
+        x.cycle=ts(x.cycle,star=tsp.x[1],frequency=tsp.x[3])
+        x.trend=ts(x.trend,star=tsp.x[1],frequency=tsp.x[3])
+        x=ts(x,star=tsp.x[1],frequency=tsp.x[3])
+    }
+    A = lambda*Q%*%solve(SIGMA.n+lambda*SIGMA.R)%*%t(Q)
+
+    res <- list(cycle=x.cycle,trend=x.trend,fmatrix=A,title="Hodrick-Prescott Filter",
+                xname=xname,call=as.call(match.call()),
+                type=type,lambda=lambda,method="hpfilter",x=x)
+
+    return(structure(res,class="mFilter"))
+}
+
+
+
+
+####$$$$ mFilter\R/mFilter.R
+## Generic mFilter functions
+## Part of mFilter package
+
+mFilter <- function(x, ...) UseMethod("mFilter")
+
+mFilter.default <- function(x, ...) mFilter.ts(x, ...)
+
+mFilter.ts <- function(x, filter=c("HP","BK","CF","BW","TR"), ...)
+{
+    filt = match.arg(filter)
+    call = match.call()
+    ag = list(...)
+    switch(filt,
+           "HP" = {res <- hpfilter(x,freq=ag$freq,type=ag$type,drift=ag$drift)},
+           "BK" = {res <- bkfilter(x,pl=ag$pl,pu=ag$pu,nfix=ag$nfix,type=ag$type,drift=ag$drift)},
+           "CF" = {res <- cffilter(x,pl=ag$pl,pu=ag$pu,root=ag$root,drift=ag$drift,
+                                 type=ag$type, nfix=ag$nfix,theta=ag$theta)},
+           "BW" = {res <- bwfilter(x,freq=ag$freq,nfix=ag$nfix,drift=ag$drift)},
+           "TR" = {res <- trfilter(x,pl=ag$pl,pu=ag$pu,drift=ag$drift)}
+                  )
+    res$xname <- deparse(substitute(x))
+    return(res)
+}
+
+print.mFilter <- function(x, digits = max(3, getOption("digits") - 3), ...)
+{
+    if (!inherits(x, "mFilter"))
+    stop("method is only for mFilter objects")
+
+    # Title:
+    cat("\nTitle:\n ")
+    cat(x$title, "\n")
+
+    ## Call:
+    cat("\nCall:\n ")
+    cat(paste(deparse(x$call), sep = "\n", collapse = "\n"),
+        "\n", sep = "")
+
+    ## Method:
+    cat("\nMethod:\n ", x$method, "\n", sep = "")
+
+    ## Filter Type:
+    cat("\nFilter Type:\n ", x$type, "\n", sep = "")
+
+    ## Series
+    cat("\nSeries:\n ", x$xname, "\n\n", sep = "")
+
+    names <- c(x$xname,"Trend","Cycle")
+    out <- cbind(x$x,x$trend,x$cycle)
+    colnames(out) <- names
+    rownames(out) <- time(x$x)
+    if(any(frequency(x$x) == c(4,12)))
+        print(out, digits=digits)
+    else
+        print(as.data.frame(out),digits = digits)
+
+    invisible(x)
+}
+
+summary.mFilter <- function(object, digits = max(3, getOption("digits") - 3), ...)
+{
+    if (!inherits(object, "mFilter"))
+        stop("method is only for mFilter objects")
+
+    ## Title:
+    cat("\nTitle:\n ")
+    cat(object$title, "\n")
+
+    ## Call:
+    cat("\nCall:\n ")
+    cat(paste(deparse(object$call), sep = "\n", collapse = "\n"),
+        "\n", sep = "")
+
+    ## Method:
+    cat("\nMethod:\n ", object$method, "\n", sep = "")
+
+    ## Filter Type:
+    cat("\nFilter Type:\n ", object$type, "\n", sep = "")
+
+    ## Series
+    cat("\nSeries:\n ", object$xname, "\n", sep = "")
+
+    names <- c(object$xname,"Trend","Cycle")
+    out <- cbind(object$x,object$trend,object$cycle)
+    colnames(out) <- names
+    rownames(out) <- time(object$x)
+
+    cat("\nDescriptive Statistics:\n ", "\n", sep = "")
+    print(summary(out), digits = digits)
+    #browser()
+    gof <- function(object)
+    {
+        res <- object$cycle
+        pe <- res/object$x
+        out <- c(mean(res,na.rm=TRUE), mean(res^2,na.rm=TRUE),
+                 mean(abs(res),na.rm=TRUE), mean(pe,na.rm=TRUE), mean(abs(pe),na.rm=TRUE))
+        names(out) <- c("ME","MSE","MAE","MPE","MAPE")
+        return(out)
+    }
+    cat("\nIn-sample error measures:\n")
+    print(gof(object), digits = digits)
+
+    cat("\n")
+    #if(any(frequency(object$x) == c(4,12)))
+        #print(out)
+    #else
+        #print(as.data.frame(out))
+
+    invisible(object)
+}
+
+
+plot.mFilter <- function(x, reference.grid = TRUE, col = "steelblue", ask=interactive(), ...)
+{
+    if (!inherits(x, "mFilter"))
+        stop("method is only for mFilter objects")
+    opar <- par(no.readonly=TRUE)
+    par(ask=ask,mfrow=c(2,1),mar=c(3,2,2,1))
+
+    ag <- list(...)
+    if(is.null(ag$main))
+        main <- paste(x$title, "of", x$xname)
+
+    ylim <- range(c(x$x,x$trend),na.rm=TRUE)
+    plot(x$x,type="l",main=main,ylab="",ylim=ylim,col=col,...)
+    lines(x$trend,col="red")
+    if (reference.grid) grid()
+    legend("topleft",legend=c(x$xname,"trend"),col=c(col,"red"),lty=rep(1,2),ncol=2)
+    plot(x$cycle,type="l",main="Cyclical component (deviations from trend)",
+         ylab="",col=col,...)
+    if (reference.grid) grid()
+    par(opar)
+
+    invisible(x)
+}
+
+residuals.mFilter <- function(object, ...) return(object$cycle)
+
+fitted.mFilter <- function(object, ...) return(object$trend)
+
+
+
+
+####$$$$ mFilter\R/trfilter.R
+###
+### Trigonometric regression filter
+trfilter <- function(x,pl=NULL,pu=NULL,drift=FALSE)
+{
+    if(is.null(drift)) drift <- FALSE
+    call <- as.call(match.call())
+    xname <- deparse(substitute(x))
+    res <- cffilter(x,pl=pl,pu=pu,drift=drift,root=FALSE,
+                    type="trigonometric",nfix=0,theta=1)
+    res$method <- "trfilter"
+    res$call <- call
+    res$xname <- xname
+    return(res)
+}
+
+####$$$$ mFilter\R/zzz.R
+#.First.lib <-
+.onLoad <- function(lib, pkg)
+{
+    mylib <- dirname(system.file(package = "mFilter"))
+    ver <- packageDescription("mFilter", lib = mylib)["Version"]
+    txt <- c("\n",
+             paste(sQuote("mFilter"), "version:", ver),
+             "\n",
+             paste(sQuote("mFilter"),
+                   "is a package for time series filtering"),
+             "\n",
+             paste("See",
+                   sQuote("library(help=\"mFilter\")"),
+                   "for details"),
+             "\n",
+             paste("Author: Mehmet Balcilar, mbalcilar@yahoo.com"),
+             "\n"
+             )
+    if(interactive() || getOption("verbose"))
+        writeLines(strwrap(txt, indent = 4, exdent = 4))
+}
+
