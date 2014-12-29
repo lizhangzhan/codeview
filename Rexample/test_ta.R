@@ -35,3 +35,7 @@ data(sample_matrix)
 class(sample_matrix)
 str(sample_matrix)
 as.data.frame(sample_matrix) %>% rownames %>% head
+
+
+
+
