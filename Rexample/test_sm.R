@@ -7,7 +7,9 @@ xyplot(EuStockMarkets[,1]) +
   layer(panel.tskernel(x, y, width = 100, col = 1, sides = 1)) +
   layer(panel.tskernel(x, y, width = 20, col = 2, sides = 1))
 
-x = EuStockMarkets[,1]
+x = EuStockMarkets[,1] 
+
+x = as.numeric(x)
 
 plot(x)
 
@@ -31,6 +33,10 @@ getDailyPrices = function( tickerSym, startDate, endDate )
   prices.ts = ts(prices)
   return( prices.ts )
 }
+
+p <- getDailyPrices('CMBC', '2007-06-01', '2014-12-31')
+
+a <- getQuote('APPL')
 
 kalmanFilter = function( x )
 {
@@ -111,6 +117,35 @@ legend("topleft",legend=c("series", "freq=10, nfix=2",
 
 
 
+unemp.bw1 <- bwfilter(x, drift=TRUE)
+unemp.bw2 <- bwfilter(x, freq=8,drift=TRUE)
+unemp.bw3 <- bwfilter(x, freq=10, nfix=3, drift=TRUE)
+unemp.bw4 <- bwfilter(x, freq=10, nfix=4, drift=TRUE)
+
+
+bspline(x)
+
+plot(unemp.bw2)
+plot(unemp.bw3)
+
+par(mfrow=c(2,1),mar=c(3,3,2,1),cex=.8)
+plot(unemp.bw1$x,
+     main="Butterworth filter of unemployment: Trend,
+     drift=TRUE",col=1, ylab="")
+lines(unemp.bw1$trend,col=2)
+lines(unemp.bw2$trend,col=3)
+lines(unemp.bw3$trend,col=4)
+lines(unemp.bw4$trend,col=5)
+legend("topleft",legend=c("series", "freq=10, nfix=2",
+                          "freq=8, nfix=2", "freq=10, nfix=3", "freq=10, nfix=4"),
+       col=1:5, lty=rep(1,5), ncol=1)
+
+
+x = x[1400:1800]
+
+unemp.cf2 <- cffilter(x, pl=8,pu=40,drift=TRUE, root=TRUE)
+plot(cffilter(x, drift=TRUE, root=TRUE))
+plot(unemp.cf2)
 
 
 data(unemp)
@@ -131,6 +166,73 @@ lines(unemp.cf3$trend,col=4)
 lines(unemp.cf4$trend,col=5)
 legend("topleft",legend=c("series", "pl=2, pu=32", "pl=8, pu=40", "pl=2, pu=60",
                           "pl=2, pu=40, theta=.1,.4"), col=1:5, lty=rep(1,5), ncol=1)
+
+
+
+
+
+
+
+
+
+
+
+
+
+###############################################################################
+# Load Systematic Investor Toolbox (SIT)
+# https://systematicinvestor.wordpress.com/systematic-investor-toolbox/
+###############################################################################
+setInternet2(TRUE)
+con = gzcon(url('http://www.systematicportfolio.com/sit.gz', 'rb'))
+source(con)
+close(con)
+
+#*****************************************************************
+# Load historical data
+#****************************************************************** 
+load.packages('quantmod')
+
+tickers = spl('600016.SS')
+
+data <- new.env()
+
+# load historical data, getSymbols from quantmod
+getSymbols(tickers, src = 'yahoo', from = '1970-01-01', env = data, auto.assign = T)    
+
+# data after 2007-06
+s <- data[['600016.SS']][, '600016.SS.Adjusted'][1700:3650] 
+
+library('magrittr')
+
+x <- s %>% as.numeric
+
+length(x)
+
+x <- x[1:500]
+
+y1 <- ksmooth(1:length(x), x, bandwidth=4)$y
+plot(x, type='l')
+lines(y1, col='red')
+
+require(KernSmooth)
+z0 <- locpoly(1:length(x), x, bandwidth = 2, degree = 0)
+z1 <- locpoly(1:length(x), x, bandwidth = 2, degree = 1)
+z2 <- locpoly(1:length(x), x, bandwidth = 2, degree = 2)
+lines(z0, col='blue')
+lines(z1, col='red')
+lines(z2, col='gray')
+
+
+library(dlm)
+nileJumpFilt <- dlmFilter(Nile, dlmNileJump)
+
+
+l1 <- lowess(1:length(x), x, f = 0.01)
+l2 <- lowess(1:length(x), x, f = 0.05)
+lines(l1, col='blue')
+lines(l2, col='red')
+
 
 
 

@@ -1,6 +1,6 @@
 import os
 
-path = r'C:\Users\yinz\Desktop\helm-master\helm-master'
+path = r'C:\Users\yinz\Desktop\hdf5_1.6.9.tar\hdf5'
 last_pos = path.rfind('\\')+1
 
 fp = open('all.txt', 'w')
