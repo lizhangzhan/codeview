@@ -1,6 +1,6 @@
 import os
 
-path = r'C:\Users\yinz\Desktop\yasnippet-snippets-master\yasnippet-snippets-master'
+path = r'C:\Users\yinz\Desktop\Penlight-master'
 last_pos = path.rfind('\\')+1
 
 fp = open('all.txt', 'w')
